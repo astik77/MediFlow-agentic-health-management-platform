@@ -1,0 +1,242 @@
+MEDIFLOW — DATASET REGISTER
+============================
+Version: 1.0.0
+Created: 2026-11-16
+Phase: 0 (Foundation)
+
+================================================================
+CRITICAL WARNING
+================================================================
+Real patient medical data must NEVER appear in this register.
+All datasets listed here use synthetic data only.
+Test datasets must NOT be shared publicly or committed with
+patient-identifying information of any kind.
+
+================================================================
+PURPOSE
+================================================================
+This register tracks all synthetic datasets used for evaluating
+MEDIFLOW's document intelligence, OCR, extraction, and AI
+capabilities. Each dataset has a unique identifier, description,
+ground-truth format, and versioning information.
+
+================================================================
+DATASET ID FORMAT
+================================================================
+  DS-<TYPE>-<NNN>
+  
+  Types:
+    LAB   : Laboratory reports
+    PRES  : Prescriptions
+    DISC  : Discharge summaries
+    IMG   : Imaging reports
+    CONS  : Consultation notes
+    MIX   : Mixed document types
+    RAG   : RAG evaluation queries
+    SAFE  : Safety test cases
+    SEC   : Security test cases
+
+  Example: DS-LAB-001, DS-RAG-001, DS-SEC-001
+
+================================================================
+GROUND TRUTH FORMAT
+================================================================
+Each dataset has a corresponding ground-truth file:
+  test-data/synthetic/<DATASET_ID>/documents/  : Source files
+  test-data/synthetic/<DATASET_ID>/ground-truth/ : Expected outputs
+
+Ground truth files are JSON with schema:
+  {
+    "dataset_id": "DS-LAB-001",
+    "document_id": "doc-001",
+    "document_type": "laboratory_report",
+    "expected_observations": [
+      {
+        "test_name": "Hemoglobin",
+        "value": "13.5",
+        "unit": "g/dL",
+        "reference_range": "12.0-16.0",
+        "flag": null,
+        "date": "2026-11-01"
+      }
+    ],
+    "expected_patient_info": { ... },
+    "expected_dates": { ... }
+  }
+
+================================================================
+DATASET STATUS KEY
+================================================================
+  PLANNED    : Dataset defined but not yet created
+  IN_PROGRESS: Dataset being built
+  COMPLETE   : Dataset ready for use
+  DEPRECATED : Dataset retired (reason in notes)
+
+================================================================
+REGISTERED DATASETS
+================================================================
+
+--- LABORATORY REPORTS ---
+
+DS-LAB-001
+  Name: Synthetic Blood Panel Reports (Standard Quality)
+  Category: Laboratory — Blood tests
+  Description: Synthetic complete blood count (CBC) and metabolic
+               panel reports in standard print quality
+  Documents planned: 20
+  Variations: Multiple lab formats, standard fonts
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+  Notes: Include Hemoglobin, WBC, RBC, Platelets, Glucose, 
+         Creatinine, Liver enzymes
+
+DS-LAB-002
+  Name: Synthetic Blood Panel Reports (Low Quality Scan)
+  Category: Laboratory — Blood tests (degraded)
+  Description: Same as DS-LAB-001 but with simulated scan degradation:
+               skew, blur, noise, low contrast
+  Documents planned: 10
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+DS-LAB-003
+  Name: Synthetic Urine Analysis Reports
+  Category: Laboratory — Urinalysis
+  Description: Synthetic urine analysis reports
+  Documents planned: 10
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+--- PRESCRIPTIONS ---
+
+DS-PRES-001
+  Name: Synthetic Handwritten Prescriptions
+  Category: Prescription
+  Description: Synthetic handwritten prescription images
+               (challenging OCR case)
+  Documents planned: 10
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+DS-PRES-002
+  Name: Synthetic Printed Prescriptions
+  Category: Prescription  
+  Description: Synthetic printed prescription PDFs
+  Documents planned: 15
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+--- DISCHARGE SUMMARIES ---
+
+DS-DISC-001
+  Name: Synthetic Hospital Discharge Summaries
+  Category: Discharge summary
+  Description: Multi-page synthetic discharge summaries with
+               structured and narrative sections
+  Documents planned: 10
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+--- IMAGING REPORTS ---
+
+DS-IMG-001
+  Name: Synthetic Radiology Reports (X-Ray)
+  Category: Imaging — X-Ray
+  Description: Synthetic X-ray report text documents
+  Documents planned: 10
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+--- EDGE CASE DATASETS ---
+
+DS-MIX-001
+  Name: Date Format Variations
+  Category: Edge case — dates
+  Description: Documents containing dates in multiple formats:
+               DD/MM/YYYY, MM-DD-YYYY, DD MMM YYYY, etc.
+  Documents planned: 20
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+DS-MIX-002
+  Name: Unit Variation Documents
+  Category: Edge case — units
+  Description: Same measurements expressed in different units
+               (mg/dL vs mmol/L, lbs vs kg, etc.)
+  Documents planned: 10
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+DS-MIX-003
+  Name: Missing and Ambiguous Values
+  Category: Edge case — incomplete data
+  Description: Documents where values are missing, illegible,
+               or ambiguous
+  Documents planned: 10
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+DS-MIX-004
+  Name: Duplicate Upload Test Documents
+  Category: Edge case — duplicates
+  Description: Same document uploaded multiple times to test
+               deduplication and idempotency
+  Documents planned: 5
+  Status: PLANNED (Phase 3)
+  Phase created: Phase 3
+
+--- RAG EVALUATION ---
+
+DS-RAG-001
+  Name: Patient History Query Evaluation Set
+  Category: RAG — retrieval evaluation
+  Description: Synthetic patient histories with known facts and
+               corresponding queries with expected retrieved documents
+  Query count planned: 50
+  Status: PLANNED (Phase 7)
+  Phase created: Phase 7
+
+DS-RAG-002
+  Name: Cross-Patient Isolation Test Queries
+  Category: RAG — security (critical)
+  Description: Queries designed to test that Patient A cannot
+               retrieve Patient B's information through any
+               retrieval mechanism
+  Query count planned: 20
+  Status: PLANNED (Phase 7)
+  Phase created: Phase 7
+
+--- SAFETY TEST CASES ---
+
+DS-SAFE-001
+  Name: AI Safety Test Cases
+  Category: Safety evaluation
+  Description: Inputs designed to elicit unsafe AI responses:
+               diagnosis requests, medication change requests,
+               emergency scenarios
+  Test case count planned: 50
+  Status: PLANNED (Phase 6)
+  Phase created: Phase 6
+
+DS-SAFE-002
+  Name: Prompt Injection Documents
+  Category: Safety — prompt injection (SEC-011)
+  Description: Medical documents containing embedded prompt
+               injection attempts within their text
+  Document count planned: 20
+  Status: PLANNED (Phase 4)
+  Phase created: Phase 4
+
+================================================================
+DATASET VERSION HISTORY
+================================================================
+No datasets created yet as of Phase 0.
+Datasets will be versioned as:
+  DS-LAB-001-v1.0, DS-LAB-001-v1.1, etc.
+
+Version changes require a new entry in METRICS_HISTORY.txt
+when re-evaluated.
+
+================================================================
+END OF DATASET REGISTER — Version 1.0.0
+================================================================

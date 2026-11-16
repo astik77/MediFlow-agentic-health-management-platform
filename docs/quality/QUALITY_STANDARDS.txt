@@ -1,0 +1,286 @@
+MEDIFLOW — QUALITY STANDARDS
+=============================
+Version: 1.0.0
+Created: 2026-11-16
+Phase: 0 (Foundation)
+Status: ACTIVE
+
+================================================================
+1. PHILOSOPHY AND PRINCIPLES
+================================================================
+
+1.1 Core Principle
+Quality is a foundational requirement, not a phase-end milestone.
+Every component of MEDIFLOW must meet defined quality standards
+before being accepted into the main branch.
+
+1.2 Guiding Values
+- Correctness over speed
+- Security over convenience
+- Reliable data over impressive AI demonstrations
+- Traceability over unsupported conclusions
+- Measurable accuracy over subjective claims
+- Maintainability over unnecessary complexity
+
+1.3 Healthcare AI Responsibility
+MEDIFLOW handles personal medical information.
+Quality failures are not merely technical — they can mislead patients
+about their health. All quality processes reflect this responsibility.
+
+================================================================
+2. CODE QUALITY STANDARDS
+================================================================
+
+2.1 Python (Backend)
+- Python 3.11+ required
+- Full type annotations on all functions and methods
+- Pydantic schemas for all API request/response models
+- Maximum function length: 50 lines (exceptions documented)
+- Maximum file length: 400 lines (exceptions documented)
+- No duplicated business logic
+- Descriptive variable and function names
+- Explicit error handling — no bare except clauses
+- Structured logging using structlog
+- All secrets from environment variables — never hardcoded
+- Ruff for linting and formatting (line length: 100)
+- mypy strict mode on all production code
+- 100% of public functions must have docstrings
+
+2.2 TypeScript (Frontend)
+- TypeScript strict mode: true
+- No use of `any` type without documented justification
+- All React components typed with explicit prop interfaces
+- No sensitive data hardcoded in frontend code
+- Server-side authorization must not be bypassed by frontend
+- Form validation using Zod schemas
+- Loading, error and empty states required for all data-fetching components
+- Accessible components (WCAG 2.2 AA target)
+- Responsive design required (mobile 320px+, tablet 640px+, desktop 1024px+)
+
+2.3 General
+- No dead code committed
+- No TODO comments without associated issue tracking
+- No console.log / print statements in production code
+- Dependency versions pinned in lockfiles
+- Lockfiles committed to version control
+
+================================================================
+3. TESTING STANDARDS
+================================================================
+
+3.1 Test Coverage Requirements
+Backend unit tests: Minimum 80% coverage on business logic modules
+Backend integration tests: All API endpoints must have integration tests
+Frontend: Type-check and lint must pass with zero errors
+End-to-end (Playwright): Critical user journeys must be covered
+AI evaluation: All AI components must have evaluation test sets
+
+3.2 Test Categories Required
+
+UNIT TESTS
+- All service functions
+- All utility functions
+- All Pydantic validators
+- All configuration logic
+- Coverage tool: pytest-cov
+
+INTEGRATION TESTS
+- All API endpoints
+- All database operations
+- All background job workflows
+- Coverage tool: pytest
+
+API TESTS (via ASGI test client)
+- Happy path for all endpoints
+- Error cases for all endpoints
+- Authorization rejection cases
+- Rate limiting behavior
+- Pagination behavior
+
+DATABASE TESTS
+- All migrations run forward and backward cleanly
+- Foreign key constraints enforced
+- Index behavior
+- Transaction rollback behavior
+
+SECURITY TESTS
+- SEC-001 through SEC-018 (see security model)
+- Authentication bypass attempts
+- Cross-patient access attempts
+- Malicious upload attempts
+- Prompt injection attempts
+
+AI EVALUATION TESTS
+- Structured output validity
+- Citation correctness
+- Safety constraint compliance
+- Patient isolation in retrieval
+- Hallucination detection
+
+3.3 Test Execution Requirements
+- All tests must be run before marking a task complete
+- Test results must be recorded — never assumed
+- Failing tests must be investigated and fixed
+- Tests must not be weakened to pass
+- Mocks permitted in isolated unit tests only
+- Real integrations must also be tested end-to-end
+- Flaky tests must be fixed or removed — not ignored
+
+3.4 Test Naming Convention
+test_<unit>_<condition>_<expected_outcome>
+Example: test_login_with_wrong_password_returns_401
+
+================================================================
+4. OCR AND DOCUMENT EXTRACTION QUALITY
+================================================================
+
+4.1 Minimum Acceptable Thresholds
+Character Error Rate (CER): < 5% for high-quality scans
+Word Error Rate (WER): < 10% for high-quality scans
+Test extraction completeness: > 90% of test values extracted
+
+4.2 Blocking Thresholds
+CER > 20%: Block release of OCR component changes
+WER > 30%: Block release of OCR component changes
+Test value extraction completeness < 70%: Block
+
+4.3 Critical Accuracy Requirements
+- Numerical values must be extracted exactly (no rounding)
+- Units must remain associated with their values
+- Reference ranges must remain associated with their tests
+- Dates must be parsed in original format and normalized
+- Patient identifiers must not be confused between documents
+
+4.4 Uncertainty Handling
+- All extracted values must carry a review_status field
+- AI-extracted values are initially CANDIDATE, not CONFIRMED
+- Patients must approve before values become confirmed records
+- Low-confidence extractions must be flagged for manual review
+- Never silently promote a candidate to confirmed
+
+================================================================
+5. AI RESPONSE QUALITY STANDARDS
+================================================================
+
+5.1 Structured Output Requirements
+- All AI-generated structured output must pass Pydantic schema validation
+- Invalid structured output must trigger fallback, not corruption
+- Structured output validation failure rate: < 2%
+
+5.2 Factual Consistency Requirements
+- AI responses must be grounded in patient records or general knowledge
+- Fabrication of patient history: ZERO TOLERANCE
+- Unsupported claim rate: < 5%
+- Citation coverage for record-specific claims: > 90%
+
+5.3 Safety Requirements
+- Diagnosis claims: FORBIDDEN
+- Prescription changes: FORBIDDEN
+- Medication dosage changes: FORBIDDEN
+- Stopping prescribed medication: FORBIDDEN
+- Emergency services replacement: FORBIDDEN
+All safety constraint violations: ZERO TOLERANCE
+Safety test pass rate: 100% required before any AI component release
+
+5.4 Source Attribution
+- All record-specific claims must cite source document or record
+- Citation format must include document ID and approximate location
+- Patient-reported vs AI-extracted vs confirmed information must be distinguished
+
+================================================================
+6. RAG QUALITY STANDARDS
+================================================================
+
+6.1 Retrieval Metrics
+Recall@5: > 0.80
+Precision@5: > 0.60
+MRR (Mean Reciprocal Rank): > 0.70
+Citation correctness: > 90%
+
+6.2 Patient Isolation (Critical Security Requirement)
+Cross-patient retrieval: ZERO TOLERANCE
+Patient isolation tests must pass 100% before any RAG release
+
+6.3 Deletion Consistency
+Deleted document content must not appear in retrieval: 100% required
+Test SEC-016 must pass before any document deletion changes
+
+================================================================
+7. RELIABILITY STANDARDS
+================================================================
+
+7.1 Background Job Reliability
+Job failure rate (without retry): < 10%
+Job success rate after retry: > 95%
+Duplicate record creation rate: 0%
+Processing time (standard document): < 60 seconds
+
+7.2 API Reliability
+API error rate: < 1%
+P95 response time for standard endpoints: < 500ms
+P95 response time for AI endpoints: < 30 seconds
+
+7.3 Database Reliability
+Migration forward success rate: 100%
+Migration backward (rollback) success rate: 100%
+Transaction atomicity: 100%
+
+================================================================
+8. DOCUMENTATION STANDARDS
+================================================================
+
+8.1 Required Documentation
+- README.md must reflect current actual state
+- API specification updated with every endpoint change
+- Database design updated with every schema change
+- Architecture documents updated with every architectural change
+- Security model updated with every security-relevant change
+- Quality documents updated with every evaluation run
+
+8.2 Documentation Accuracy
+Documentation must reflect actual implementation, not aspirational design.
+If a feature is planned but not implemented, it must be labelled PLANNED.
+If a feature is partially implemented, it must be labelled PARTIAL.
+
+================================================================
+9. RELEASE CRITERIA
+================================================================
+
+9.1 Per-Phase Release Gate
+Before approving any phase as complete:
+[ ] All acceptance criteria met
+[ ] All tests run and results recorded
+[ ] No blocking threshold violations
+[ ] All safety tests passed (100%)
+[ ] All cross-patient isolation tests passed (100%)
+[ ] Documentation updated
+[ ] Quality files updated
+[ ] No hardcoded secrets
+[ ] No real patient data in test datasets
+
+9.2 AI Component Release Gate (Additional)
+[ ] Structured output validation passing
+[ ] Safety constraint tests: 100% pass
+[ ] Patient isolation tests: 100% pass
+[ ] Baseline evaluation run and recorded
+[ ] No safety-critical regressions
+[ ] Prompt versions recorded
+
+================================================================
+10. MEASUREMENT FREQUENCY
+================================================================
+
+After every significant change to: OCR pipeline, extraction logic,
+embedding models, prompts, RAG configuration, or AI models:
+- Run relevant benchmark
+- Record results in METRICS_HISTORY.txt
+- Create individual test report
+- Update ACCURACY_IMPROVEMENT_LOG.txt if applicable
+
+Routine API and unit tests: Run on every commit (CI pipeline)
+Full evaluation suite: Run at end of each phase
+Security tests: Run at end of Phases 1, 3, 7 and 9 at minimum
+
+================================================================
+END OF QUALITY STANDARDS — Version 1.0.0
+================================================================

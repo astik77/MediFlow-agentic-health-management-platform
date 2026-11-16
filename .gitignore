@@ -1,0 +1,142 @@
+# ============================================================
+# MEDIFLOW — .gitignore
+# ============================================================
+
+# --- Environment & Secrets ---
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+# lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv/
+venv/
+ENV/
+env/
+.env/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+*.log
+*.pot
+*.mo
+*.pyc
+
+# --- uv ---
+.uv/
+uv.lock   # Keep this — commit lockfiles per blueprint
+
+# --- Node.js ---
+node_modules/
+.pnpm-store/
+.npm/
+*.tsbuildinfo
+.next/
+.nuxt/
+out/
+dist/
+.cache/
+.parcel-cache/
+
+# --- Next.js ---
+.next/
+out/
+next-env.d.ts
+
+# --- Testing ---
+coverage/
+.nyc_output/
+*.snap
+playwright-report/
+test-results/
+.playwright/
+
+# --- IDEs ---
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+.docker/
+
+# --- Database ---
+*.sqlite
+*.sqlite3
+*.db
+postgres-data/
+
+# --- Uploads / Documents ---
+uploads/
+media/
+static/uploads/
+test-data/real/
+
+# --- AI / ML ---
+*.bin
+*.gguf
+*.ggml
+models/
+ollama-models/
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- OS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk

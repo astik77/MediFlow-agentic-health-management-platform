@@ -1,0 +1,283 @@
+MEDIFLOW — METRICS REGISTER
+============================
+Version: 1.0.0
+Created: 2026-11-16
+Phase: 0 (Foundation)
+
+FORMAT: ID | Category | Name | Description | Formula | Target | Blocking Threshold | Frequency | Baseline
+
+================================================================
+SECTION 1: OCR METRICS
+================================================================
+
+OCR-001 | OCR | Character Error Rate (CER)
+  Description: Rate of incorrectly recognized characters in extracted text
+  Formula: (substitutions + deletions + insertions) / total_reference_characters
+  Target: < 0.05 (5%)
+  Blocking Threshold: > 0.20 (20%)
+  Measurement Frequency: Every OCR model or preprocessing pipeline change
+  Current Baseline: NOT MEASURED
+
+OCR-002 | OCR | Word Error Rate (WER)
+  Description: Rate of incorrectly recognized words in extracted text
+  Formula: (S + D + I) / N where S=substitutions, D=deletions, I=insertions, N=total words
+  Target: < 0.10 (10%)
+  Blocking Threshold: > 0.30 (30%)
+  Measurement Frequency: Every OCR model or preprocessing pipeline change
+  Current Baseline: NOT MEASURED
+
+OCR-003 | OCR | Text Extraction Completeness
+  Description: Percentage of expected text regions successfully extracted
+  Formula: extracted_regions / total_expected_regions
+  Target: > 0.90 (90%)
+  Blocking Threshold: < 0.70 (70%)
+  Measurement Frequency: Every OCR pipeline change
+  Current Baseline: NOT MEASURED
+
+================================================================
+SECTION 2: DOCUMENT CLASSIFICATION METRICS
+================================================================
+
+DC-001 | Document Classification | Accuracy
+  Description: Percentage of documents classified into the correct category
+  Formula: correct_classifications / total_documents
+  Target: > 0.90 (90%)
+  Blocking Threshold: < 0.75 (75%)
+  Measurement Frequency: Every classification model or prompt change
+  Current Baseline: NOT MEASURED
+
+DC-002 | Document Classification | Precision (per class)
+  Description: Of documents classified as class X, what fraction were truly class X
+  Formula: TP / (TP + FP) per class, then macro-averaged
+  Target: > 0.85 macro-average
+  Blocking Threshold: < 0.70 for any safety-critical class
+  Measurement Frequency: Every classification model or prompt change
+  Current Baseline: NOT MEASURED
+
+DC-003 | Document Classification | Recall (per class)
+  Description: Of documents truly class X, what fraction were classified as X
+  Formula: TP / (TP + FN) per class, then macro-averaged
+  Target: > 0.85 macro-average
+  Blocking Threshold: < 0.70 for any safety-critical class
+  Measurement Frequency: Every classification model or prompt change
+  Current Baseline: NOT MEASURED
+
+DC-004 | Document Classification | F1 Score
+  Description: Harmonic mean of Precision and Recall
+  Formula: 2 * (Precision * Recall) / (Precision + Recall), macro-averaged
+  Target: > 0.85
+  Blocking Threshold: < 0.70
+  Measurement Frequency: Every classification model or prompt change
+  Current Baseline: NOT MEASURED
+
+DC-005 | Document Classification | Confusion Matrix
+  Description: Full N×N matrix of predicted vs actual classes
+  Formula: Count matrix
+  Target: Diagonal-dominant; off-diagonal elements documented
+  Blocking Threshold: Any safety-critical misclassification > 10%
+  Measurement Frequency: Every classification change
+  Current Baseline: NOT MEASURED
+
+================================================================
+SECTION 3: NUMERICAL EXTRACTION METRICS
+================================================================
+
+NE-001 | Numerical Extraction | Exact Numerical Match Rate
+  Description: Percentage of numerical values extracted exactly as they appear
+  Formula: exact_matches / total_expected_values
+  Target: > 0.95 (95%)
+  Blocking Threshold: < 0.85 (85%)
+  Measurement Frequency: Every extraction pipeline change
+  Current Baseline: NOT MEASURED
+
+NE-002 | Numerical Extraction | Unit Extraction Accuracy
+  Description: Percentage of values where the correct unit was also extracted
+  Formula: correct_unit_extractions / total_expected_values
+  Target: > 0.90 (90%)
+  Blocking Threshold: < 0.80 (80%)
+  Measurement Frequency: Every extraction pipeline change
+  Current Baseline: NOT MEASURED
+
+NE-003 | Numerical Extraction | Reference Range Extraction Accuracy
+  Description: Percentage of observations where reference range was correctly extracted
+  Formula: correct_reference_ranges / total_expected_ranges
+  Target: > 0.85 (85%)
+  Blocking Threshold: < 0.70 (70%)
+  Measurement Frequency: Every extraction pipeline change
+  Current Baseline: NOT MEASURED
+
+NE-004 | Numerical Extraction | Date Extraction Accuracy
+  Description: Percentage of dates correctly extracted and normalized
+  Formula: correct_dates / total_expected_dates
+  Target: > 0.90 (90%)
+  Blocking Threshold: < 0.80 (80%)
+  Measurement Frequency: Every extraction pipeline change
+  Current Baseline: NOT MEASURED
+
+NE-005 | Numerical Extraction | Observation Association Accuracy
+  Description: Percentage of values correctly associated with their test name
+  Formula: correct_associations / total_expected_associations
+  Target: > 0.95 (95%)
+  Blocking Threshold: < 0.85 (85%) — critical for data integrity
+  Measurement Frequency: Every extraction pipeline change
+  Current Baseline: NOT MEASURED
+
+================================================================
+SECTION 4: RAG RETRIEVAL METRICS
+================================================================
+
+RAG-001 | RAG | Recall@5
+  Description: Fraction of relevant documents appearing in top-5 results
+  Formula: relevant_in_top_5 / total_relevant
+  Target: > 0.80
+  Blocking Threshold: < 0.60
+  Measurement Frequency: Every retrieval pipeline or embedding model change
+  Current Baseline: NOT MEASURED
+
+RAG-002 | RAG | Precision@5
+  Description: Fraction of top-5 results that are relevant
+  Formula: relevant_in_top_5 / 5
+  Target: > 0.60
+  Blocking Threshold: < 0.40
+  Measurement Frequency: Every retrieval pipeline or embedding model change
+  Current Baseline: NOT MEASURED
+
+RAG-003 | RAG | Mean Reciprocal Rank (MRR)
+  Description: Average reciprocal rank of first relevant result
+  Formula: mean(1 / rank_of_first_relevant)
+  Target: > 0.70
+  Blocking Threshold: < 0.50
+  Measurement Frequency: Every retrieval pipeline or embedding model change
+  Current Baseline: NOT MEASURED
+
+RAG-004 | RAG | Citation Correctness Rate
+  Description: Percentage of AI citations that correctly reference source
+  Formula: verified_citations / total_citations
+  Target: > 0.90 (90%)
+  Blocking Threshold: < 0.75 (75%)
+  Measurement Frequency: Every RAG answer generation change
+  Current Baseline: NOT MEASURED
+
+RAG-005 | RAG | Source Coverage
+  Description: Percentage of answer claims that have a cited source
+  Formula: cited_claims / total_claims_requiring_citation
+  Target: > 0.90 (90%)
+  Blocking Threshold: < 0.75 (75%)
+  Measurement Frequency: Every RAG answer generation change
+  Current Baseline: NOT MEASURED
+
+RAG-006 | RAG | Faithfulness
+  Description: Whether generated answer is entailed by retrieved context
+  Formula: Evaluated by LLM judge or manual annotation
+  Target: > 0.85
+  Blocking Threshold: < 0.70
+  Measurement Frequency: Every generation prompt or model change
+  Current Baseline: NOT MEASURED
+
+RAG-007 | RAG | Context Relevance
+  Description: Average relevance of retrieved chunks to the query
+  Formula: Evaluated by LLM judge or relevance model
+  Target: > 0.70
+  Blocking Threshold: < 0.50
+  Measurement Frequency: Every retrieval pipeline change
+  Current Baseline: NOT MEASURED
+
+RAG-008 | RAG | Cross-Patient Retrieval Rate (Security)
+  Description: Rate at which Patient A's queries retrieve Patient B's data
+  Formula: cross_patient_retrievals / total_retrievals
+  Target: 0.00 (ZERO TOLERANCE)
+  Blocking Threshold: > 0.00 — any occurrence blocks release
+  Measurement Frequency: Every RAG or access control change
+  Current Baseline: NOT MEASURED
+
+================================================================
+SECTION 5: AI RESPONSE QUALITY METRICS
+================================================================
+
+AIR-001 | AI Response | Structured Output Validity Rate
+  Description: Percentage of AI responses passing Pydantic schema validation
+  Formula: valid_responses / total_responses
+  Target: > 0.98 (98%)
+  Blocking Threshold: < 0.95 (95%)
+  Measurement Frequency: Every model, prompt or schema change
+  Current Baseline: NOT MEASURED
+
+AIR-002 | AI Response | Factual Consistency Rate
+  Description: Percentage of AI claims consistent with source records
+  Formula: consistent_claims / total_verifiable_claims
+  Target: > 0.95 (95%)
+  Blocking Threshold: < 0.85 (85%)
+  Measurement Frequency: Every model, prompt change
+  Current Baseline: NOT MEASURED
+
+AIR-003 | AI Response | Unsupported Claim Rate
+  Description: Percentage of claims not supported by any source
+  Formula: unsupported_claims / total_claims
+  Target: < 0.05 (5%)
+  Blocking Threshold: > 0.15 (15%)
+  Measurement Frequency: Every model, prompt change
+  Current Baseline: NOT MEASURED
+
+AIR-004 | AI Response | Safety Constraint Pass Rate
+  Description: Percentage of safety tests that the AI correctly handles
+  Formula: safe_responses / total_safety_test_cases
+  Target: 1.00 (100%) — ZERO TOLERANCE for violations
+  Blocking Threshold: < 1.00 — any failure blocks release
+  Measurement Frequency: Every model, prompt, or safety filter change
+  Current Baseline: NOT MEASURED
+
+AIR-005 | AI Response | Patient History Retrieval Accuracy
+  Description: Accuracy of AI responses about patient's own history
+  Formula: correct_history_responses / total_history_queries
+  Target: > 0.90 (90%)
+  Blocking Threshold: < 0.75 (75%)
+  Measurement Frequency: Every RAG or model change
+  Current Baseline: NOT MEASURED
+
+================================================================
+SECTION 6: RELIABILITY METRICS
+================================================================
+
+REL-001 | Reliability | Background Job Failure Rate (without retry)
+  Description: Rate at which jobs fail on first attempt
+  Formula: failed_first_attempts / total_job_attempts
+  Target: < 0.10 (10%)
+  Blocking Threshold: > 0.25 (25%)
+  Measurement Frequency: Every job system or worker change
+  Current Baseline: NOT MEASURED
+
+REL-002 | Reliability | Retry Success Rate
+  Description: Rate at which failed jobs succeed on retry
+  Formula: successful_retries / total_retried_jobs
+  Target: > 0.95 (95%)
+  Blocking Threshold: < 0.80 (80%)
+  Measurement Frequency: Every job system change
+  Current Baseline: NOT MEASURED
+
+REL-003 | Reliability | Duplicate Record Rate
+  Description: Rate at which background jobs create duplicate records
+  Formula: duplicate_records / total_records_created
+  Target: 0.00 (ZERO TOLERANCE)
+  Blocking Threshold: > 0.00 — any occurrence investigated immediately
+  Measurement Frequency: Every background processing change
+  Current Baseline: NOT MEASURED
+
+REL-004 | Reliability | API Error Rate
+  Description: Fraction of API requests returning 5xx errors
+  Formula: 5xx_responses / total_responses
+  Target: < 0.01 (1%)
+  Blocking Threshold: > 0.05 (5%)
+  Measurement Frequency: Continuous monitoring
+  Current Baseline: NOT MEASURED
+
+REL-005 | Reliability | Document Processing Time (P95)
+  Description: 95th percentile time to fully process a standard document
+  Formula: P95(processing_time_seconds)
+  Target: < 60 seconds
+  Blocking Threshold: > 300 seconds
+  Measurement Frequency: Every processing pipeline change
+  Current Baseline: NOT MEASURED
+
+================================================================
+END OF METRICS REGISTER — Version 1.0.0
+================================================================

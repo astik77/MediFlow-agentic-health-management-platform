@@ -1,0 +1,84 @@
+MEDIFLOW — ACCURACY IMPROVEMENT LOG
+=====================================
+Version: 1.0.0
+Created: 2026-11-16
+Phase: 0 (Foundation)
+
+================================================================
+PURPOSE
+================================================================
+This log records every accepted improvement to any MEDIFLOW
+quality metric. Each entry documents what changed, what metrics
+improved, whether regressions occurred, and who approved it.
+
+Entries must NEVER be deleted.
+Historical entries must NEVER be edited.
+If a change was reverted, record a revert entry.
+
+================================================================
+ENTRY FORMAT
+================================================================
+
+ENTRY_ID     : Sequential (IMP-001, IMP-002, ...)
+DATE         : YYYY-MM-DD
+PHASE        : 0–9
+COMPONENT    : Which component was changed
+               (OCR, Document Classification, Numerical Extraction,
+                Embedding Model, RAG Pipeline, LLM Model,
+                Prompt: <prompt_id>, Backend API, etc.)
+CHANGE_DESC  : What was changed and why
+PREV_METRICS : Metrics before change (from METRICS_HISTORY)
+NEW_METRICS  : Metrics after change (from METRICS_HISTORY)
+NET_CHANGE   : Summary of delta for primary metric
+REGRESSION   : YES or NO — did any metric worsen?
+REG_DETAILS  : Details of regression if YES (or N/A)
+SAFETY_IMPACT: Any impact on safety metrics?
+APPROVED_BY  : Author / reviewer
+NOTES        : Additional context
+
+================================================================
+CURRENT STATUS
+================================================================
+Phase: 0 (Foundation)
+No AI components, OCR pipelines, extraction pipelines, 
+RAG systems or evaluation datasets exist yet.
+
+No improvements have been recorded.
+Improvements will begin in Phase 4 (Document Intelligence).
+
+================================================================
+IMPROVEMENT ENTRIES
+================================================================
+
+--- Phase 0 ---
+[No entries — baseline not yet established]
+
+--- Phase 4 (planned) ---
+First OCR pipeline will be evaluated and recorded here.
+
+--- Phase 5 (planned) ---
+First local LLM selection and configuration will be recorded here.
+
+--- Phase 6 (planned) ---
+Conversation agent prompt improvements will be recorded here.
+
+--- Phase 7 (planned) ---
+RAG pipeline improvements will be recorded here.
+
+================================================================
+NOTES ON IMPROVEMENT PROCESS
+================================================================
+1. Before any improvement: record current baseline metrics
+2. Implement candidate change in a branch
+3. Run the full relevant evaluation suite
+4. Compare metrics — both improved AND degraded metrics
+5. Investigate any degraded metrics
+6. If safety metrics degrade even slightly: BLOCK release
+7. If cross-patient isolation tests fail: BLOCK release
+8. Record results as a TEST_REPORT (see reports/)
+9. Create an entry in this log
+10. Merge only after documented review
+
+================================================================
+END OF ACCURACY IMPROVEMENT LOG — Version 1.0.0
+================================================================

@@ -1,0 +1,90 @@
+MEDIFLOW — METRICS HISTORY
+===========================
+Version: 1.0.0
+Created: 2026-11-16
+Phase: 0 (Foundation)
+
+================================================================
+PURPOSE
+================================================================
+This file records every quality metric measurement taken during
+MEDIFLOW development. Each entry is immutable — do not edit
+historical entries. Add new entries only.
+
+No historical entries may be deleted.
+If a measurement was incorrect, record a correction entry with
+explanation rather than modifying the original.
+
+================================================================
+FILE FORMAT
+================================================================
+
+Each measurement entry uses the following fields:
+
+  ENTRY_ID     : Sequential identifier (HIST-001, HIST-002, ...)
+  DATE         : ISO 8601 date (YYYY-MM-DD)
+  TIME         : HH:MM UTC
+  PHASE        : Project phase number (0–9)
+  METRIC_ID    : Metric ID from METRICS_REGISTER.txt
+  METRIC_NAME  : Human-readable metric name
+  VALUE        : Measured value (numeric or descriptive)
+  DATASET_ID   : Dataset ID from DATASET_REGISTER.txt (or N/A)
+  MODEL_ID     : Model identifier (or N/A for non-AI metrics)
+  PROMPT_VER   : Prompt version (or N/A)
+  PIPELINE_VER : Pipeline version or git commit hash
+  TESTER       : automated / manual / <name>
+  NOTES        : Any relevant context
+
+================================================================
+PHASE 0 BASELINE NOTES
+================================================================
+Phase 0 establishes the project foundation: repository structure,
+backend framework, database connectivity, and frontend scaffold.
+
+No AI components, OCR pipelines, RAG systems, or document
+processing pipelines exist at this stage.
+
+Therefore, no AI, OCR, extraction, or RAG metrics can be measured.
+
+The only metrics measurable in Phase 0 are API reliability
+metrics for the health check endpoints.
+
+================================================================
+MEASUREMENTS LOG
+================================================================
+
+--- PHASE 0: FOUNDATION ---
+
+ENTRY_ID    : HIST-001
+DATE        : 2026-11-16
+TIME        : 13:49 UTC
+PHASE       : 0
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit and API Test Pass Rate
+VALUE       : 25/25 passed (100%)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: Phase 0 initial commit
+TESTER      : automated (pytest 8.4.2)
+NOTES       : Tests cover config unit tests (13) and health endpoint
+              API tests (12). No database connection was required as
+              the /api/v1/health endpoint gracefully degrades.
+              All 25 tests passed without failures.
+
+--- END PHASE 0 ---
+
+================================================================
+PENDING BASELINE MEASUREMENTS (to be established in later phases)
+================================================================
+  - OCR metrics: Phase 4
+  - Document classification metrics: Phase 4
+  - Numerical extraction metrics: Phase 4
+  - RAG retrieval metrics: Phase 7
+  - AI response quality metrics: Phase 6
+  - Cross-patient isolation tests: Phase 7
+  - Background job reliability: Phase 3+
+
+================================================================
+END OF METRICS HISTORY — All entries must be appended below
+================================================================

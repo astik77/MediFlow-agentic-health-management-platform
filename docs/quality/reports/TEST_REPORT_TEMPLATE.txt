@@ -1,0 +1,153 @@
+MEDIFLOW — TEST REPORT TEMPLATE
+================================
+Version: 1.0.0
+Created: 2026-11-16
+
+================================================================
+HOW TO USE THIS TEMPLATE
+================================================================
+1. Copy this template to docs/quality/reports/
+2. Name the file: TEST_REPORT_NNN_YYYY-MM-DD.txt
+   where NNN is a sequential 3-digit number
+   Example: TEST_REPORT_001_2026-11-20.txt
+3. NEVER overwrite an existing report
+4. If a test is re-run, create a NEW report with a new number
+5. Fill in every field — use "N/A" for non-applicable fields
+6. Use "NOT RUN" for tests not executed (do NOT leave blank)
+
+================================================================
+REPORT TEMPLATE — COPY FROM HERE
+================================================================
+
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_NNN_YYYY-MM-DD
+Date          : YYYY-MM-DD
+Time (UTC)    : HH:MM
+Phase         : [0-9]
+Component     : [component name, e.g. "OCR Pipeline", "Health API"]
+Test Type     : [Unit / Integration / API / Database / Security / AI Evaluation / RAG / E2E / Performance]
+Environment   : [local-dev / ci / staging]
+Tester        : [automated / manual / name]
+Run Duration  : [seconds or minutes]
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : [git commit hash or tag]
+Dataset Version   : [DS-XXX-NNN or N/A]
+Model ID/Version  : [model name + version, or N/A]
+Prompt Version    : [prompt ID + version, or N/A]
+Pipeline Version  : [pipeline description or N/A]
+Python Version    : [e.g. 3.11.4]
+Key Dependencies  : [e.g. pytest 8.4.2, fastapi 0.111.0]
+
+---
+SUMMARY
+---
+Tests Collected : [total count]
+Tests Passed    : [count]
+Tests Failed    : [count]
+Tests Skipped   : [count]
+Tests Not Run   : [count]
+Pass Rate       : [X.XX%]
+Overall Result  : [PASSED / FAILED / PARTIAL]
+
+---
+TEST RESULTS (Detailed)
+---
+[Copy the pytest/test runner output here, or summarize in table]
+
+Test ID | Test Name | Result | Notes
+--------|-----------|--------|------
+        |           |        |
+        |           |        |
+
+---
+METRICS MEASURED
+---
+[For AI/RAG/OCR evaluations — record metrics with values]
+
+Metric ID | Metric Name | Measured Value | Target | Status
+----------|-------------|----------------|--------|-------
+          |             |                |        |
+          |             |                |        |
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline values (from METRICS_HISTORY.txt):
+  HIST-NNN: [metric] = [value]
+
+Current values:
+  [metric] = [value]
+
+Change:
+  [delta description]
+
+---
+REGRESSIONS
+---
+[List any metrics that worsened compared to baseline]
+[If none: "No regressions detected."]
+
+Metric ID | Previous Value | New Value | Regression Severity
+----------|----------------|-----------|--------------------
+          |                |           |
+
+---
+ROOT CAUSE ANALYSIS (for failures)
+---
+[If tests failed, explain why]
+[If no failures: "N/A — All tests passed."]
+
+Test ID: [failing test]
+  Root Cause: [explanation]
+  Fix Applied: [what was done]
+  Fix Verified: [YES / NO / PENDING]
+
+---
+SECURITY TEST RESULTS (if applicable)
+---
+[Tick each security test run in this evaluation]
+
+SEC-001 Cross-patient document access        : [PASSED / FAILED / NOT RUN]
+SEC-002 Cross-patient conversation access    : [PASSED / FAILED / NOT RUN]
+SEC-003 Cross-patient RAG retrieval          : [PASSED / FAILED / NOT RUN]
+SEC-004 Authentication bypass                : [PASSED / FAILED / NOT RUN]
+SEC-005 Expired session access               : [PASSED / FAILED / NOT RUN]
+SEC-006 Session replay                       : [PASSED / FAILED / NOT RUN]
+SEC-007 Malicious document upload            : [PASSED / FAILED / NOT RUN]
+SEC-008 MIME/file-signature mismatch         : [PASSED / FAILED / NOT RUN]
+SEC-009 Path traversal                       : [PASSED / FAILED / NOT RUN]
+SEC-010 Resource-exhaustion file             : [PASSED / FAILED / NOT RUN]
+SEC-011 Document prompt injection            : [PASSED / FAILED / NOT RUN]
+SEC-012 Unauthorized AI tool execution       : [PASSED / FAILED / NOT RUN]
+SEC-013 Invalid patient ID in model output   : [PASSED / FAILED / NOT RUN]
+SEC-014 Unauthorized external API tx         : [PASSED / FAILED / NOT RUN]
+SEC-015 Sensitive information in logs        : [PASSED / FAILED / NOT RUN]
+SEC-016 Deleted document remaining retrievable: [PASSED / FAILED / NOT RUN]
+SEC-017 Duplicate background processing      : [PASSED / FAILED / NOT RUN]
+SEC-018 Unauthorized historical record modify: [PASSED / FAILED / NOT RUN]
+
+---
+RECOMMENDATIONS
+---
+[Any recommended follow-up actions, improvements, or investigations]
+
+---
+APPROVAL
+---
+Approved for release: [YES / NO / CONDITIONAL]
+Conditions (if any): [description]
+Approved by        : [name or automated]
+Approval date      : [YYYY-MM-DD]
+
+---
+NOTES
+---
+[Any other relevant information]
+
+================================================================
+END OF TEMPLATE
+================================================================

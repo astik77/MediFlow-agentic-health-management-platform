@@ -1,0 +1,147 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_001_2026-11-16
+Date          : 2026-11-16
+Time (UTC)    : 16:59
+Phase         : 0 (Workspace Inspection & Project Foundation)
+Component     : Core Configuration, Health Endpoints & Frontend Scaffold
+Test Type     : Unit, API Integration, Frontend Type-Check & Production Build
+Environment   : local-dev (Windows 11, x86_64)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, next build 15.3.9, next lint)
+Run Duration  : Backend tests: 41.00s | Frontend build: 3.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : Phase 0 Completion
+Dataset Version   : N/A (Phase 0)
+Model ID/Version  : N/A (Phase 0)
+Prompt Version    : N/A (Phase 0)
+Pipeline Version  : Phase 0 Foundation
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+Key Dependencies  :
+  - fastapi 0.163.1
+  - pydantic 2.14.3
+  - sqlalchemy 2.1.8
+  - asyncpg 0.32.0
+  - pytest 8.4.2
+  - ruff 0.17.5
+  - next 15.3.9
+  - react 18.3.1
+  - tailwindcss 3.4.19
+  - @tanstack/react-query 5.107.1
+
+---
+SUMMARY
+---
+Backend Tests Collected : 25
+Backend Tests Passed    : 25
+Backend Tests Failed    : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : 0 errors, 0 warnings (100% compliant)
+
+Frontend Build Status   : SUCCESS (exit code 0)
+Frontend Type-Check     : PASSED (0 TypeScript errors)
+Frontend ESLint         : PASSED (0 warnings, 0 errors)
+Static Routes Generated : 5/5 static pages prerendered successfully
+
+Overall Result          : PASSED
+
+---
+TEST RESULTS (Detailed)
+---
+
+Test ID | Test Name | Result | Notes
+--------|-----------|--------|------
+B-001 | tests/api/test_health.py::test_root_health_returns_200 | PASSED | Returns HTTP 200 immediately
+B-002 | tests/api/test_health.py::test_root_health_returns_ok_status | PASSED | Status string is 'ok'
+B-003 | tests/api/test_health.py::test_root_health_returns_service_name | PASSED | Service identifies as 'mediflow-api'
+B-004 | tests/api/test_health.py::test_root_health_returns_version | PASSED | Version matches 0.1.0
+B-005 | tests/api/test_health.py::test_root_health_returns_environment | PASSED | Correctly reports environment
+B-006 | tests/api/test_health.py::test_root_health_returns_uptime | PASSED | Monotonic uptime in seconds
+B-007 | tests/api/test_health.py::test_root_health_response_time_is_fast | PASSED | Latency < 2.0s without database
+B-008 | tests/api/test_health.py::test_api_health_returns_200_or_200_degraded | PASSED | Graceful degradation
+B-009 | tests/api/test_health.py::test_api_health_response_has_components | PASSED | Component dictionary present
+B-010 | tests/api/test_health.py::test_api_health_response_has_database_component | PASSED | Database sub-status present
+B-011 | tests/api/test_health.py::test_api_health_response_has_service_name | PASSED | Version 1 router operational
+B-012 | tests/api/test_health.py::test_api_health_response_has_python_version | PASSED | Runtime Python metadata
+B-013 | tests/unit/test_config.py::test_default_settings_load | PASSED | Default settings instantiate
+B-014 | tests/unit/test_config.py::test_default_environment_is_development | PASSED | Defaults to dev/test
+B-015 | tests/unit/test_config.py::test_cors_origins_default | PASSED | Safe CORS default list
+B-016 | tests/unit/test_config.py::test_cors_origins_parsed_from_comma_string | PASSED | Comma-separated CORS parsing
+B-017 | tests/unit/test_config.py::test_allowed_extensions_parsed_from_comma_string | PASSED | Extensions parsing & lowercasing
+B-018 | tests/unit/test_config.py::test_is_development_property | PASSED | Environment property checks
+B-019 | tests/unit/test_config.py::test_is_production_property | PASSED | Production property checks
+B-020 | tests/unit/test_config.py::test_external_ai_disabled_by_default | PASSED | Safety: External AI disabled by default
+B-021 | tests/unit/test_config.py::test_gemini_disabled_by_default | PASSED | Safety: Gemini off by default
+B-022 | tests/unit/test_config.py::test_grok_disabled_by_default | PASSED | Safety: Grok off by default
+B-023 | tests/unit/test_config.py::test_get_settings_returns_singleton | PASSED | lru_cache singleton verified
+B-024 | tests/unit/test_config.py::test_argon2_parameters_present | PASSED | Argon2id parameters strictly verified
+B-025 | tests/unit/test_config.py::test_max_upload_size_has_reasonable_default | PASSED | Upload guardrails in place
+
+F-001 | apps/web next build | PASSED | Next.js 15.3.9 production compilation
+F-002 | apps/web next lint | PASSED | 0 warnings, 0 errors
+F-003 | apps/web typecheck | PASSED | TypeScript strict mode verified
+
+---
+METRICS MEASURED
+---
+Metric ID | Metric Name | Measured Value | Target | Status
+----------|-------------|----------------|--------|-------
+REL-004 | API Error Rate (Test Suite) | 0.00% | < 1% | MET
+N/A | Backend Test Suite Pass Rate | 100.0% (25/25) | 100% | MET
+N/A | Frontend Build Success Rate | 100.0% | 100% | MET
+N/A | Code Quality Linting Compliance | 0 errors | 0 | MET
+
+---
+COMPARISON TO BASELINE
+---
+This is TEST_REPORT_001 establishing the baseline for Phase 0.
+All recorded metrics are initial baseline values.
+
+---
+REGRESSIONS
+---
+No regressions detected. Baseline established cleanly.
+
+---
+ROOT CAUSE ANALYSIS (for initial warnings during setup)
+---
+1. Next.js 14 CVE vulnerability warning:
+   - Root cause: Initial template referenced older Next.js patch.
+   - Fix: Upgraded to `next@15.3.9` and pinned dependencies.
+   - Verified: YES (`pnpm build` passed).
+
+2. Unused CSS variable & import in frontend:
+   - Root cause: Tailwind 4 shadcn generator used inside Tailwind 3 project.
+   - Fix: Reconfigured `tailwind.config.ts` and `globals.css` with clean HSL mappings.
+   - Verified: YES.
+
+3. Ruff linter deprecated config & unused imports:
+   - Root cause: Settings moved to `[tool.ruff.lint]` in Ruff 0.5+.
+   - Fix: Updated `pyproject.toml` and ran `ruff check --fix`.
+   - Verified: YES (`All checks passed!`).
+
+---
+SECURITY TEST RESULTS
+---
+Phase 0 focuses on architectural foundation; full execution of SEC-001 to SEC-018
+is scheduled across Phases 1, 3, 7, and 9.
+SEC-014 (External API guardrails disabled by default) is directly verified in test suite:
+  - test_external_ai_disabled_by_default : PASSED
+  - test_gemini_disabled_by_default : PASSED
+  - test_grok_disabled_by_default : PASSED
+
+---
+RECOMMENDATIONS
+---
+1. Proceed with Phase 1: Authentication & Patient Profile implementation.
+2. In Phase 1, implement Argon2id hashing service, session repository, and backend authorization.
+
+---
+APPROVAL
+---
+Approved for Phase 0 Completion: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-16
