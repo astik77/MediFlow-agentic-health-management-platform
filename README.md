@@ -133,10 +133,10 @@ Patient Portal will be live at: `http://localhost:3000`
   - Monorepo scaffolding, async database engine, health check endpoints, quality management framework, 25/25 automated tests passing.
 - [x] **Phase 1: Authentication & Patient Profile**
   - Argon2id password hashing, HttpOnly server-managed sessions, session revocation, password recovery, patient onboarding & profile UI, backend ownership enforcement (SEC-001/002, SEC-004, SEC-005, SEC-006), 50/50 backend tests passing.
-- [x] **Phase 2: Medical History Foundation** *(Current)*
+- [x] **Phase 2: Medical History Foundation**
   - Conditions, allergies, symptoms, numeric/non-numeric observations, immutable correction revision trail (SEC-018), chronological medical timeline, My Health & Timeline UI, strict patient isolation verified.
-- [ ] **Phase 3: Secure Document Management**
-  - Private document vault, MIME/magic byte validation, secure preview, deletion synchronization.
+- [x] **Phase 3: Secure Document Management** *(Current)*
+  - Private patient-isolated document vault, MIME & magic-byte signature validation (SEC-007/008), UUID path-traversal prevention (SEC-009), streaming size enforcement (SEC-010), SHA-256 integrity hashing, secure file download, soft-archive with disk deletion (SEC-016), FK links from health records, Document Vault UI, 91/91 backend tests passing.
 - [ ] **Phase 4: Document Intelligence & OCR**
   - PDF text extraction, OCR, table parsing, candidate fact extraction with reference ranges.
 - [ ] **Phase 5: Local AI Infrastructure**

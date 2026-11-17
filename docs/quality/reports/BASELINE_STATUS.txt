@@ -1,57 +1,63 @@
 MEDIFLOW — BASELINE STATUS
 ===========================
-Version: 1.2.0
+Version: 1.3.0
 Date: 2026-11-18
-Phase: 2 (Medical History Foundation)
-Status: PHASES 0, 1 & 2 VERIFIED
+Phase: 3 (Secure Document Management)
+Status: PHASES 0, 1, 2 & 3 VERIFIED
 
 ================================================================
 EXECUTIVE SUMMARY
 ================================================================
 Phase 0 (Foundation), Phase 1 (Authentication & Patient Profile),
-and Phase 2 (Medical History Foundation) are implemented and verified.
-Patients can create, view, edit/correct, archive, and review immutable
-revision histories across conditions, allergies, symptoms, and numeric
-or non-numeric observations, unified in a filterable chronological
-medical timeline.
+Phase 2 (Medical History Foundation), and Phase 3 (Secure Document
+Management) are implemented and verified. Patients can securely upload,
+verify (MIME + magic bytes + SHA-256), organize, search, filter, update,
+download, and soft-archive medical documents in a patient-isolated vault
+integrated with their chronological medical timeline and linked via FK to
+structured health records.
 
-AI models, OCR pipelines, document vault, and RAG vector retrieval
-remain scheduled for Phases 3-7 (status: NOT YET APPLICABLE / NOT RUN).
+Document intelligence / OCR pipelines, local AI inference, AI health
+assistant, and RAG vector retrieval remain scheduled for Phases 4-7
+(status: NOT YET APPLICABLE / NOT RUN).
 
 ================================================================
 COMPONENT STATUS & BASELINE READINESS
 ================================================================
 
-1. BACKEND API, AUTH, PROFILES & MEDICAL HISTORY
+1. BACKEND API, AUTH, PROFILES, MEDICAL HISTORY & DOCUMENT VAULT
    - Status: IMPLEMENTED & VERIFIED
    - Framework: FastAPI 0.163.1 + Pydantic v2 (Python 3.11)
-   - Modules Active: auth, patients, health_records, timeline
-   - Test Results: 58/58 automated tests PASSED (100% pass rate, 56.54s)
+   - Modules Active: auth, patients, health_records, timeline, documents
+   - Test Results: 91/91 automated tests PASSED (100% pass rate, 63.38s, 0 warnings)
      - 13 config unit tests + 8 Argon2id/token unit tests
      - 12 health API tests + 10 auth API tests + 3 patient profile tests
      - 5 medical history CRUD/provenance/revision tests
      - 1 chronological timeline filtering/search/pagination test
-     - 6 security tests (SEC-001/002, SEC-004, SEC-005, SEC-006, SEC-018)
+     - 20 document vault API tests (upload, SHA-256, list, filters, download, update, archive)
+     - 19 security tests (SEC-001/002, SEC-004, SEC-005, SEC-006, SEC-007,
+       SEC-008, SEC-009, SEC-010, SEC-016, SEC-018)
    - Linting (Ruff): 0 errors across mediflow/, tests/, migrations/
 
 2. DATABASE & ORM
-   - Status: PHASE 2 SCHEMA MIGRATION READY
+   - Status: PHASE 3 SCHEMA MIGRATIONS READY
    - Migrations:
      - 0001_phase1_auth_patients (users, sessions, password_reset_tokens, patient_profiles)
      - 0002_phase2_medical_history (patient_conditions, patient_allergies,
        patient_symptoms, health_observations, health_events, record_revisions)
+     - 0003_phase3_documents (documents + composite patient/date/type indexes)
+     - 0004_phase3_add_document_fk_links (SET NULL FKs from 4 health_records tables -> documents.id)
    - Verification: Alembic upgrade & downgrade SQL verified cleanly
 
 3. FRONTEND APPLICATION
-   - Status: PHASE 2 UI IMPLEMENTED & VERIFIED
+   - Status: PHASE 3 UI IMPLEMENTED & VERIFIED
    - Framework: Next.js 15.3.9 (App Router) + TypeScript + Tailwind CSS
    - Pages Implemented: /, /login, /register, /forgot-password,
-     /onboarding, /profile, /health, /timeline
+     /onboarding, /profile, /health, /documents, /timeline
    - Verification: tsc --noEmit (0 errors), next lint (0 warnings/errors),
-     next build (12/12 static pages generated)
+     next build (13/13 static pages generated in 12.0s)
 
-4. DOCUMENT VAULT, INTELLIGENCE & OCR
-   - Target Phases: Phases 3 & 4
+4. DOCUMENT INTELLIGENCE & OCR
+   - Target Phase: Phase 4
    - Baseline Status: NOT RUN
 
 5. LOCAL AI INFRASTRUCTURE, ASSISTANT & RAG
@@ -59,16 +65,21 @@ COMPONENT STATUS & BASELINE READINESS
    - Baseline Status: NOT RUN
 
 6. SECURITY CONTROLS (SEC-001 through SEC-018)
-   - SEC-001 / SEC-002 (Cross-patient access — Profiles & Medical History): PASSED
+   - SEC-001 / SEC-002 (Cross-patient access — Profiles, Medical History & Documents): PASSED
    - SEC-004 (Authentication bypass): PASSED
    - SEC-005 (Expired session access): PASSED
    - SEC-006 (Session revocation & replay): PASSED
+   - SEC-007 (MIME type allowlist enforcement): PASSED
+   - SEC-008 (File magic-byte signature validation): PASSED
+   - SEC-009 (Path traversal prevention & storage containment): PASSED
+   - SEC-010 (Upload size limit / resource exhaustion guard): PASSED
    - SEC-014 (External AI disabled by default): PASSED
+   - SEC-016 (Archived/deleted document file removed & 410 Gone on download): PASSED (disk level; RAG vector sync in Phase 7)
    - SEC-018 (Unauthorized historical record modification & provenance): PASSED
-   - Remaining SEC tests: Scheduled for Phases 3, 4, 6, 7, and 9
+   - Remaining SEC tests: Scheduled for Phases 4, 6, 7, and 9
 
 ================================================================
 NEXT MILESTONES
 ================================================================
-- Obtain user approval for Phase 2 Completion
-- Proceed to Phase 3: Secure Document Management
+- Obtain user approval for Phase 3 Completion
+- Proceed to Phase 4: Document Intelligence & OCR Pipelines

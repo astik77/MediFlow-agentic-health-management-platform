@@ -203,3 +203,41 @@ Returns paginated chronological events (`event_occurred_at DESC, created_at DESC
 
 ### `POST /api/v1/timeline/events`
 Records a standalone patient-reported health event on the chronological timeline (`201 Created`).
+
+---
+
+## 6. Secure Document Vault (`/api/v1/documents`)
+
+All endpoints require authentication (`401 Unauthorized`) and enforce strict server-side patient ownership (`403 Forbidden` on cross-patient access — SEC-001/002). Internal server filesystem paths (`file_path`) are **never** returned in any API payload.
+
+### `POST /api/v1/documents`
+Uploads a medical document via `multipart/form-data`.
+- **Auth:** Required (`get_current_patient`)
+- **Fields:** `file` (required binary), `document_type` (`lab_report`, `prescription`, `discharge_summary`, `imaging`, `clinical_note`, `insurance`, `other`), `title` (optional; defaults to sanitized filename), `description` (optional), `document_date` (optional ISO date `YYYY-MM-DD`)
+- **Security Controls:**
+  - `SEC-007`: Allowed MIME types only (`application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/tiff`) — `415 Unsupported Media Type` otherwise
+  - `SEC-008`: Magic-byte signature validated against declared `Content-Type` — `400 Bad Request` on mismatch
+  - `SEC-009`: UUID-based stored filename inside `{upload_dir}/{patient_id}/` + `.resolve().is_relative_to()` containment check; user-supplied path separators stripped
+  - `SEC-010`: Chunked streaming enforces `max_upload_size_mb` (`413 Content Too Large`) and rejects empty files (`400 Bad Request`) with automatic disk cleanup on failure
+- **Side Effects:** Computes SHA-256 hash and creates a linked `document` entry in `health_events`
+- **201 Created:** `DocumentResponse`
+
+### `GET /api/v1/documents`
+Returns a paginated list of the authenticated patient's documents (`uploaded_at DESC`).
+- **Query Parameters:** `document_type`, `review_status`, `start_date`, `end_date`, `q` (search title/description/filename), `include_archived` (default `false`), `page` (default `1`), `page_size` (1–100, default `20`)
+- **200 OK:** `{ "items": [...], "total": 5, "page": 1, "page_size": 20, "has_next": false }`
+
+### `GET /api/v1/documents/{document_id}`
+Returns metadata for a single document (`200 OK`, `403 Forbidden` if another patient's document, `404 Not Found` if missing).
+
+### `GET /api/v1/documents/{document_id}/download`
+Streams the document file as an attachment (`Content-Disposition: attachment; filename*=UTF-8''...`, `X-Content-Type-Options: nosniff`).
+- **200 OK:** Binary stream with verified media type
+- **403 Forbidden:** Cross-patient access attempt
+- **410 Gone:** Document has been soft-archived and its disk file removed (SEC-016)
+
+### `PATCH /api/v1/documents/{document_id}`
+Updates mutable metadata (`title`, `description`, `document_type`, `document_date`, `review_status`). Returns `409 Conflict` if the document is archived.
+
+### `DELETE /api/v1/documents/{document_id}`
+Soft-archives the document: marks `is_archived = true`, sets `upload_status = "archived"`, deletes the physical file from disk, and logs an archival event on the timeline while preserving audit metadata. Returns `409 Conflict` if already archived.

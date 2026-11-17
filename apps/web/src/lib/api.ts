@@ -8,6 +8,12 @@ import type {
   User,
 } from "@/types/auth";
 import type {
+  DocumentItem,
+  DocumentListResponse,
+  DocumentUpdatePayload,
+  DocumentUploadPayload,
+} from "@/types/documents";
+import type {
   HealthEvent,
   HealthObservation,
   HealthOverview,
@@ -331,4 +337,92 @@ export const timelineApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+};
+
+export const documentsApi = {
+  list: (params?: {
+    document_type?: string;
+    review_status?: string;
+    start_date?: string;
+    end_date?: string;
+    q?: string;
+    include_archived?: boolean;
+    page?: number;
+    page_size?: number;
+  }): Promise<DocumentListResponse> => {
+    const query = new URLSearchParams();
+    if (params?.document_type) query.set("document_type", params.document_type);
+    if (params?.review_status) query.set("review_status", params.review_status);
+    if (params?.start_date) query.set("start_date", params.start_date);
+    if (params?.end_date) query.set("end_date", params.end_date);
+    if (params?.q) query.set("q", params.q);
+    if (params?.include_archived) query.set("include_archived", "true");
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.page_size) query.set("page_size", String(params.page_size));
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiRequest<DocumentListResponse>(`/api/v1/documents${suffix}`);
+  },
+
+  get: (id: string): Promise<DocumentItem> =>
+    apiRequest<DocumentItem>(`/api/v1/documents/${id}`),
+
+  upload: async (payload: DocumentUploadPayload): Promise<DocumentItem> => {
+    const formData = new FormData();
+    formData.append("file", payload.file);
+    formData.append("document_type", payload.document_type);
+    if (payload.title && payload.title.trim()) {
+      formData.append("title", payload.title.trim());
+    }
+    if (payload.description && payload.description.trim()) {
+      formData.append("description", payload.description.trim());
+    }
+    if (payload.document_date) {
+      formData.append("document_date", payload.document_date);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/documents`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      let detail = `Upload failed with status ${response.status}`;
+      try {
+        const errorData = (await response.json()) as {
+          detail?: string | Array<{ msg?: string }>;
+          message?: string;
+        };
+        if (typeof errorData.detail === "string") {
+          detail = errorData.detail;
+        } else if (Array.isArray(errorData.detail) && errorData.detail[0]?.msg) {
+          detail = errorData.detail[0].msg;
+        } else if (errorData.message) {
+          detail = errorData.message;
+        }
+      } catch {
+        detail = response.statusText || detail;
+      }
+      throw new ApiError(response.status, detail);
+    }
+
+    return (await response.json()) as DocumentItem;
+  },
+
+  update: (
+    id: string,
+    payload: DocumentUpdatePayload
+  ): Promise<DocumentItem> =>
+    apiRequest<DocumentItem>(`/api/v1/documents/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+
+  archive: (id: string): Promise<DocumentItem> =>
+    apiRequest<DocumentItem>(`/api/v1/documents/${id}`, {
+      method: "DELETE",
+    }),
+
+  getDownloadUrl: (id: string): string =>
+    `${API_BASE_URL}/api/v1/documents/${id}/download`,
 };

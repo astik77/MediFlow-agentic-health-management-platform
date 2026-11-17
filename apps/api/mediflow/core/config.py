@@ -54,10 +54,10 @@ class Settings(BaseSettings):
     argon2_memory_cost: int = 65536
     argon2_parallelism: int = 4
 
-    # ---- File Upload ----
+    # ---- File Upload / Document Storage ----
     upload_dir: str = "./uploads"
     max_upload_size_mb: int = 50
-    allowed_extensions: list[str] = ["pdf", "jpg", "jpeg", "png"]
+    allowed_extensions: list[str] = ["pdf", "jpg", "jpeg", "png", "webp", "tif", "tiff"]
 
     # ---- AI Providers ----
     ollama_base_url: str = "http://localhost:11434"

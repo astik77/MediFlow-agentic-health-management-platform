@@ -19,6 +19,7 @@ import type { TimelineResponse } from "@/types/health";
 
 const CATEGORIES = [
   { id: "", label: "All Events" },
+  { id: "document", label: "Documents" },
   { id: "observation", label: "Observations" },
   { id: "symptom", label: "Symptoms" },
   { id: "condition", label: "Conditions" },

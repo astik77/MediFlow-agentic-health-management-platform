@@ -60,7 +60,11 @@ class PatientCondition(Base):
     review_status: Mapped[str] = mapped_column(
         String(32), default="confirmed", nullable=False
     )  # confirmed, candidate, rejected, uncertain
-    source_document_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -104,7 +108,11 @@ class PatientAllergy(Base):
     review_status: Mapped[str] = mapped_column(
         String(32), default="confirmed", nullable=False
     )
-    source_document_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -149,7 +157,11 @@ class PatientSymptom(Base):
     review_status: Mapped[str] = mapped_column(
         String(32), default="confirmed", nullable=False
     )
-    source_document_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -206,7 +218,11 @@ class HealthObservation(Base):
     review_status: Mapped[str] = mapped_column(
         String(32), default="confirmed", nullable=False, index=True
     )
-    source_document_id: Mapped[uuid.UUID | None] = mapped_column(Uuid(as_uuid=True), nullable=True)
+    source_document_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     source_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
     extraction_method: Mapped[str | None] = mapped_column(String(64), nullable=True)
     extraction_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)

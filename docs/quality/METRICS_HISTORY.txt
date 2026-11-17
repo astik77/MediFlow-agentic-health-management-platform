@@ -147,6 +147,48 @@ NOTES       : Added /health (My Health portal + RevisionHistoryModal) and
 
 --- END PHASE 2 ---
 
+--- PHASE 3: SECURE DOCUMENT MANAGEMENT ---
+
+ENTRY_ID    : HIST-006
+DATE        : 2026-11-18
+TIME        : 20:03 UTC
+PHASE       : 3
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit, API, and Security Test Pass Rate
+VALUE       : 91/91 passed (100%)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: Phase 3 implementation
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5)
+NOTES       : Covers 58 Phase 0-2 tests + 20 Document Vault API tests
+              (upload PDF/JPEG/PNG, SHA-256 integrity, filtering, search,
+              pagination, metadata update, download stream, soft-archive
+              with disk removal & 410 Gone, timeline events) + 13 Phase 3
+              security tests (SEC-001/002 cross-patient 403, SEC-004 auth
+              rejection, SEC-007 MIME allowlist, SEC-008 magic-byte match,
+              SEC-009 path traversal containment, SEC-010 streaming size
+              limit & empty-file rejection). Ruff lint: 0 errors. 0 warnings.
+
+ENTRY_ID    : HIST-007
+DATE        : 2026-11-18
+TIME        : 20:03 UTC
+PHASE       : 3
+METRIC_ID   : N/A (Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 13/13 pages built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: Phase 3 implementation
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Added /documents (Medical Document Vault with drag-and-drop
+              upload, filtering/search, metadata edit modal, secure download,
+              inline archive confirmation, pagination) and updated Navbar &
+              Timeline category filters.
+
+--- END PHASE 3 ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

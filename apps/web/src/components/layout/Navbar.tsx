@@ -8,6 +8,7 @@ import {
   User as UserIcon,
   ShieldCheck,
   HeartPulse,
+  FileText,
   Clock,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -42,7 +43,7 @@ export function Navbar() {
                 MEDIFLOW
               </span>
               <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#2457A6] border border-blue-200 hidden sm:inline">
-                Phase 2
+                Phase 3
               </span>
             </div>
           </Link>
@@ -52,6 +53,10 @@ export function Navbar() {
               <Link href="/health" className={navLinkClass("/health")}>
                 <HeartPulse className="w-4 h-4 text-[#2457A6]" />
                 My Health
+              </Link>
+              <Link href="/documents" className={navLinkClass("/documents")}>
+                <FileText className="w-4 h-4 text-[#2457A6]" />
+                Documents
               </Link>
               <Link href="/timeline" className={navLinkClass("/timeline")}>
                 <Clock className="w-4 h-4 text-[#2457A6]" />
@@ -72,6 +77,13 @@ export function Navbar() {
               >
                 <HeartPulse className="w-4 h-4 text-[#2457A6]" />
                 Health
+              </Link>
+              <Link
+                href="/documents"
+                className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-[#172033] hover:bg-slate-100"
+              >
+                <FileText className="w-4 h-4 text-[#2457A6]" />
+                Docs
               </Link>
               <Link
                 href="/timeline"

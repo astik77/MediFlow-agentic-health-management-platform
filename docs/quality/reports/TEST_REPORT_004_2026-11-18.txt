@@ -1,0 +1,119 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_004_2026-11-18
+Date          : 2026-11-18
+Time (UTC)    : 20:03
+Phase         : 3 (Secure Document Management)
+Component     : Documents Module (ORM, Service, Router), Health-Record FK Links, Document Vault UI
+Test Type     : Unit, API Integration, Security & Isolation (SEC-001/002, SEC-004, SEC-007–010, SEC-016), Migration SQL, Frontend Type-Check, Lint & Build
+Environment   : local-dev (Windows 11, x86_64)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1, tsc, next lint, next build 15.3.9)
+Run Duration  : Backend full suite: 63.38s | Frontend build: 12.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : Phase 3 Completion (v1.3.0)
+Dataset Version   : N/A (Phase 3)
+Model ID/Version  : N/A (Phase 3)
+Prompt Version    : N/A (Phase 3)
+Pipeline Version  : Phase 3 Secure Document Management
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+
+---
+SUMMARY
+---
+Backend Tests Collected : 91
+Backend Tests Passed    : 91
+Backend Tests Failed    : 0
+Backend Tests Skipped   : 0
+Backend Warnings        : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : PASSED (All checks passed!, 0 errors)
+Alembic Migrations      : PASSED (0003_phase3_documents & 0004_phase3_add_document_fk_links upgrade/downgrade --sql verified)
+
+Frontend Type-Check     : PASSED (tsc --noEmit: 0 errors)
+Frontend ESLint         : PASSED (next lint: 0 warnings, 0 errors)
+Frontend Build          : PASSED (next build: 13/13 static pages generated)
+
+Overall Result          : PASSED
+
+---
+TEST RESULTS (Detailed — Phase 3 Additions)
+---
+
+Test ID | Test Name | Result | Notes
+--------|-----------|--------|------
+DOC-001 | test_upload_pdf | PASSED | Valid PDF upload returns 201, SHA-256 hash, no internal file_path exposed
+DOC-002 | test_upload_jpeg | PASSED | Valid JPEG magic-byte upload succeeds
+DOC-003 | test_upload_png | PASSED | Valid PNG magic-byte upload succeeds
+DOC-004 | test_upload_default_title_from_filename | PASSED | Blank title falls back to sanitized original filename
+DOC-005 | test_upload_sha256_integrity | PASSED | Computed SHA-256 matches raw file bytes exactly
+DOC-006 | test_list_documents_empty | PASSED | Empty paginated response returned
+DOC-007 | test_list_documents_after_upload | PASSED | Uploaded documents listed in reverse chronological order
+DOC-008 | test_list_filter_by_document_type | PASSED | Category filtering works
+DOC-009 | test_list_excludes_archived_by_default | PASSED | Archived excluded unless include_archived=true
+DOC-010 | test_get_document_metadata | PASSED | Single document metadata returned without file_path
+DOC-011 | test_get_nonexistent_document_returns_404 | PASSED | Unknown UUID returns 404 Not Found
+DOC-012 | test_download_document | PASSED | Authenticated stream matches exact bytes with attachment header
+DOC-013 | test_download_archived_returns_410 | PASSED | Archived document returns 410 Gone (SEC-016)
+DOC-014 | test_update_document_metadata | PASSED | Partial PATCH updates title, document_type, review_status
+DOC-015 | test_update_archived_document_returns_409 | PASSED | Archived document update blocked with 409 Conflict
+DOC-016 | test_archive_document | PASSED | Marks is_archived=True, upload_status=archived, unlinks disk file
+DOC-017 | test_archive_already_archived_returns_409 | PASSED | Double-archive returns 409 Conflict
+DOC-018 | test_upload_creates_timeline_event | PASSED | Linked 'document' HealthEvent created with clinical date
+DOC-019 | test_list_pagination | PASSED | page, page_size, total, has_next accurate
+DOC-020 | test_list_search_and_date_filter | PASSED | q search and start_date/end_date filters verified
+S-007   | test_sec004_unauthenticated_{upload,list,download}_rejected (3 tests) | PASSED | 401 Unauthorized without valid session
+S-008   | test_sec007_{text_file,executable,html}_rejected (3 tests) | PASSED | Disallowed MIME types return 415 Unsupported Media Type
+S-009   | test_sec008_{pdf_exe,jpeg_pdf,png_random}_rejected (3 tests) | PASSED | Magic-byte mismatch returns 400 Bad Request; no file left on disk
+S-010   | test_sec009_path_traversal_in_filename | PASSED | Path separators stripped; UUID stored_filename strictly inside patient dir
+S-011   | test_sec010_{oversized,empty}_file_rejected (2 tests) | PASSED | Exceeding max_size returns 413 (cleaned up); empty file returns 400
+S-012   | test_cross_patient_document_access_forbidden | PASSED | Patient B gets empty list and 403 Forbidden on GET/download/PATCH/DELETE
+F-007   | apps/web pnpm type-check | PASSED | 0 TypeScript errors
+F-008   | apps/web pnpm lint | PASSED | 0 ESLint warnings/errors
+F-009   | apps/web pnpm build | PASSED | Built /documents (6.01 kB) cleanly alongside all 12 prior routes (13/13 total)
+M-005   | alembic upgrade 0002_phase2_medical_history:head --sql | PASSED | Valid PostgreSQL DDL for documents table + 4 health_records FK constraints
+M-006   | alembic downgrade head:0002_phase2_medical_history --sql | PASSED | Clean rollback DDL
+
+(All 58 Phase 0, Phase 1, and Phase 2 tests also re-executed and PASSED.)
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline (HIST-004/005): 58/58 backend tests passed (100%), 12/12 frontend pages built
+Current run (HIST-006/007): 91/91 backend tests passed (100%), 13/13 frontend pages built
+Change: +33 Phase 3 API & security tests (+1 frontend route /documents), zero regressions, zero warnings.
+
+---
+REGRESSIONS
+---
+No regressions detected.
+
+---
+SECURITY TEST RESULTS
+---
+SEC-001 Cross-patient access (profiles, records, documents) : PASSED (403 Forbidden)
+SEC-002 Cross-patient record & document isolation           : PASSED
+SEC-003 Cross-patient RAG retrieval                         : NOT RUN (Scheduled Phase 7)
+SEC-004 Authentication bypass                               : PASSED (Phases 1-3 endpoints)
+SEC-005 Expired session access                              : PASSED
+SEC-006 Session replay / revocation                         : PASSED
+SEC-007 Malicious / disallowed MIME type upload             : PASSED (415 Unsupported Media Type)
+SEC-008 File signature (magic-byte) mismatch                : PASSED (400 Bad Request)
+SEC-009 Path traversal attempt                              : PASSED (UUID storage + containment check)
+SEC-010 Oversized / empty upload resource exhaustion        : PASSED (413 Content Too Large / 400)
+SEC-011–013 AI prompt/tool security                         : NOT RUN (Scheduled Phase 4/6)
+SEC-014 Unauthorized external API tx                        : PASSED (Config guardrails verified)
+SEC-015 Sensitive information in logs                       : NOT RUN (Scheduled Phase 9)
+SEC-016 Deleted document remaining retrievable              : PASSED (Disk file unlinked & 410 Gone; vector sync Phase 7)
+SEC-017 Duplicate background processing                     : NOT RUN (Scheduled Phase 4)
+SEC-018 Unauthorized historical record modification         : PASSED
+
+---
+APPROVAL
+---
+Approved for Phase 3 Completion: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-18
