@@ -15,7 +15,9 @@ from slowapi.util import get_remote_address
 
 from mediflow.api.v1.routers import auth as auth_router
 from mediflow.api.v1.routers import health as health_router
+from mediflow.api.v1.routers import health_records as health_records_router
 from mediflow.api.v1.routers import patients as patients_router
+from mediflow.api.v1.routers import timeline as timeline_router
 from mediflow.core.config import get_settings
 from mediflow.core.logging import configure_logging, get_logger
 
@@ -91,6 +93,8 @@ def create_application() -> FastAPI:
     app.include_router(health_router.router)
     app.include_router(auth_router.router, prefix=settings.api_prefix)
     app.include_router(patients_router.router, prefix=settings.api_prefix)
+    app.include_router(health_records_router.router, prefix=settings.api_prefix)
+    app.include_router(timeline_router.router, prefix=settings.api_prefix)
 
     return app
 

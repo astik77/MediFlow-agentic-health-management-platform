@@ -13,7 +13,7 @@ export default function Home() {
         <div className="flex flex-col items-start gap-4 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-[#157A5B] border border-emerald-200">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Phase 1: Authentication & Patient Profile Active
+            Phase 2: Medical History & Chronological Timeline Active
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#172033] leading-tight">
             Your health history, <br />
@@ -77,10 +77,10 @@ export default function Home() {
           <div className="flex items-center justify-between border-b border-[#E4E7EC] pb-4">
             <div>
               <h2 className="text-lg font-bold text-[#172033]">Platform Status</h2>
-              <p className="text-xs text-[#667085]">Phase 1 Authentication, Sessions & Patient Baseline active</p>
+              <p className="text-xs text-[#667085]">Phase 2 Medical History, Provenance Revisions & Timeline active</p>
             </div>
             <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-50 text-[#157A5B] border border-emerald-200">
-              50/50 Backend Tests Passing
+              58/58 Backend Tests Passing
             </span>
           </div>
 

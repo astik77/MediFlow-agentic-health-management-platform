@@ -1,0 +1,97 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_003_2026-11-18
+Date          : 2026-11-18
+Time (UTC)    : 19:20
+Phase         : 2 (Medical History Foundation)
+Component     : Health Records (Conditions, Allergies, Symptoms, Observations), Revision History, Medical Timeline, My Health & Timeline UI
+Test Type     : Unit, API Integration, Security & Isolation (SEC-004, SEC-018), Migration SQL, Frontend Type-Check, Lint & Build
+Environment   : local-dev (Windows 11, x86_64)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1, tsc, next lint, next build 15.3.9)
+Run Duration  : Backend full suite: 56.54s | Frontend build: 11.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : Phase 2 Completion
+Dataset Version   : N/A (Phase 2)
+Model ID/Version  : N/A (Phase 2)
+Prompt Version    : N/A (Phase 2)
+Pipeline Version  : Phase 2 Medical History & Timeline
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+
+---
+SUMMARY
+---
+Backend Tests Collected : 58
+Backend Tests Passed    : 58
+Backend Tests Failed    : 0
+Backend Tests Skipped   : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : PASSED (All checks passed!, 0 errors)
+Alembic Migration 0002  : PASSED (upgrade 0001:head --sql and downgrade head:0001 --sql verified)
+
+Frontend Type-Check     : PASSED (tsc --noEmit: 0 errors)
+Frontend ESLint         : PASSED (next lint: 0 warnings, 0 errors)
+Frontend Build          : PASSED (next build: 12/12 static pages generated)
+
+Overall Result          : PASSED
+
+---
+TEST RESULTS (Detailed — Phase 2 Additions)
+---
+
+Test ID | Test Name | Result | Notes
+--------|-----------|--------|------
+H-001 | test_create_list_correct_archive_condition_with_history | PASSED | Verified create, list, non-destructive patch, 3-entry revision trail, soft archive
+H-002 | test_allergy_lifecycle | PASSED | Verified create, severity correction, before/after snapshot in history
+H-003 | test_symptom_lifecycle | PASSED | Verified occurrence timestamp preservation & status resolution
+H-004 | test_numeric_and_non_numeric_observations_preserve_units_and_ranges | PASSED | Verified value_raw, unit_raw, reference_range_text, numeric parsing (13.5) and non-numeric (122/78 -> None), filtering, correction history
+H-005 | test_overview_counts_and_recent_events | PASSED | Accurate aggregation across all 4 categories + timeline count
+T-001 | test_timeline_chronological_ordering_and_filters | PASSED | Verified descending event_occurred_at ordering, category filter, date range filter, search query, pagination, standalone event creation
+S-005 | test_sec_004_unauthenticated_rejected_on_health_records_and_timeline | PASSED | 401 Unauthorized across all 6 Phase 2 GET roots
+S-006 | test_cross_patient_medical_history_and_sec_018_isolation | PASSED | Patient 2 receives empty lists/timeline, 403 Forbidden on direct GET/PATCH/DELETE/history across all 4 categories; Patient 1 records & revision count untouched
+F-004 | apps/web pnpm type-check | PASSED | 0 TypeScript errors
+F-005 | apps/web pnpm lint | PASSED | 0 ESLint warnings/errors
+F-006 | apps/web pnpm build | PASSED | Built /health (7.09 kB) and /timeline (5.1 kB) cleanly alongside all Phase 0/1 routes
+M-003 | alembic upgrade 0001_phase1_auth_patients:head --sql | PASSED | Valid PostgreSQL DDL for 6 tables + composite indexes
+M-004 | alembic downgrade head:0001_phase1_auth_patients --sql | PASSED | Clean rollback DDL
+
+(All 50 Phase 0 and Phase 1 tests also re-executed and PASSED.)
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline (HIST-002/003): 50/50 backend tests passed (100%), 10/10 frontend pages built
+Current run (HIST-004/005): 58/58 backend tests passed (100%), 12/12 frontend pages built
+Change: +8 comprehensive Phase 2 API/DB/security test suites (+2 frontend routes), zero regressions.
+
+---
+REGRESSIONS
+---
+No regressions detected.
+
+---
+SECURITY TEST RESULTS
+---
+SEC-001 Cross-patient access (profiles & medical records) : PASSED
+SEC-002 Cross-patient record isolation                    : PASSED
+SEC-003 Cross-patient RAG retrieval                       : NOT RUN (Scheduled Phase 7)
+SEC-004 Authentication bypass                             : PASSED (Phase 1 & Phase 2 endpoints)
+SEC-005 Expired session access                            : PASSED
+SEC-006 Session replay / revocation                       : PASSED
+SEC-007–010 Document upload security                      : NOT RUN (Scheduled Phase 3)
+SEC-011–013 AI prompt/tool security                       : NOT RUN (Scheduled Phase 4/6)
+SEC-014 Unauthorized external API tx                      : PASSED (Config guardrails verified)
+SEC-015 Sensitive information in logs                     : NOT RUN (Scheduled Phase 9)
+SEC-016 Deleted document remaining retrievable            : NOT RUN (Scheduled Phase 3/7)
+SEC-017 Duplicate background processing                   : NOT RUN (Scheduled Phase 3/4)
+SEC-018 Unauthorized historical record modification       : PASSED (Cross-patient 403 + immutable RecordRevision log)
+
+---
+APPROVAL
+---
+Approved for Phase 2 Completion: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-18

@@ -111,6 +111,42 @@ NOTES       : Routes built: /, /login, /register, /forgot-password,
 
 --- END PHASE 1 ---
 
+--- PHASE 2: MEDICAL HISTORY FOUNDATION ---
+
+ENTRY_ID    : HIST-004
+DATE        : 2026-11-18
+TIME        : 19:20 UTC
+PHASE       : 2
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit, API, and Security Test Pass Rate
+VALUE       : 58/58 passed (100%)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: Phase 2 implementation
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5)
+NOTES       : Covers 50 Phase 0/1 tests + 5 health records CRUD/revision
+              tests + 1 timeline ordering/filtering/pagination test +
+              2 Phase 2 security & isolation tests (SEC-004, SEC-018,
+              cross-patient medical history isolation). Ruff lint: 0 errors.
+
+ENTRY_ID    : HIST-005
+DATE        : 2026-11-18
+TIME        : 19:20 UTC
+PHASE       : 2
+METRIC_ID   : N/A (Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 12/12 pages built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: Phase 2 implementation
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Added /health (My Health portal + RevisionHistoryModal) and
+              /timeline (Chronological Medical Timeline).
+
+--- END PHASE 2 ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

@@ -1,6 +1,6 @@
 # MEDIFLOW — API Specification (v1)
 
-**Current Status:** Phase 0 (Health) & Phase 1 (Authentication, Sessions, Patient Profiles) Implemented & Verified.  
+**Current Status:** Phase 0 (Health), Phase 1 (Authentication, Sessions, Patient Profiles), & Phase 2 (Medical History & Timeline) Implemented & Verified.  
 **Base URL (Local Dev):** `http://localhost:8000`  
 **API Prefix:** `/api/v1`  
 **Authentication Mechanism:** Server-managed opaque sessions transmitted via `HttpOnly`, `SameSite=Lax`, `Secure` (production) cookie named `mediflow_session`. Optional `Authorization: Bearer <token>` fallback supported for automated testing.
@@ -162,3 +162,44 @@ Retrieves a patient profile by UUID with strict server-side ownership enforcemen
 - **Auth:** Required (`get_current_patient`)
 - **200 OK:** `PatientProfileResponse` (only when `patient_id == current_patient.id`)
 - **403 Forbidden:** When `patient_id != current_patient.id` (prevents both cross-patient access and ID enumeration)
+
+
+---
+
+## 4. Medical History Records (`/api/v1/health-records`)
+
+All endpoints require authentication (`401 Unauthorized`) and enforce strict patient ownership (`403 Forbidden` on cross-patient record access or modification — SEC-001/SEC-018). Every creation, correction, and archival operation atomically appends an immutable entry to `record_revisions` and updates `health_events`.
+
+### `GET /api/v1/health-records/overview`
+Returns summary counts (`conditions_count`, `active_conditions_count`, `allergies_count`, `symptoms_count`, `ongoing_symptoms_count`, `observations_count`, `timeline_events_count`) and the 5 most recent timeline events.
+
+### Conditions (`/api/v1/health-records/conditions`)
+- `GET /conditions?include_archived=false` — List patient conditions
+- `POST /conditions` — Create condition (`201 Created`) + initial revision + timeline event
+- `GET /conditions/{condition_id}` — Fetch single condition (ownership enforced)
+- `PATCH /conditions/{condition_id}` — Non-destructive correction with optional `correction_reason`
+- `DELETE /conditions/{condition_id}?reason=...` — Soft-archive condition & log `archived` revision
+- `GET /conditions/{condition_id}/history` — Chronological `RecordRevision` trail
+
+### Allergies (`/api/v1/health-records/allergies`)
+- `GET /allergies`, `POST /allergies`, `GET /allergies/{id}`, `PATCH /allergies/{id}`, `DELETE /allergies/{id}`, `GET /allergies/{id}/history`
+
+### Symptoms (`/api/v1/health-records/symptoms`)
+- `GET /symptoms`, `POST /symptoms`, `GET /symptoms/{id}`, `PATCH /symptoms/{id}`, `DELETE /symptoms/{id}`, `GET /symptoms/{id}/history`
+
+### Health Observations (`/api/v1/health-records/observations`)
+Supports both numeric (`"13.5"`) and non-numeric (`"122/78"`, `"Positive"`) values while preserving `value_raw`, `unit_raw`, `value_numeric`, `reference_range_text`, `abnormality_flag`, and `observed_at`.
+- `GET /observations?observation_type=...&display_name=...&include_archived=false`
+- `POST /observations`, `GET /observations/{id}`, `PATCH /observations/{id}`, `DELETE /observations/{id}`, `GET /observations/{id}/history`
+
+---
+
+## 5. Medical Timeline (`/api/v1/timeline`)
+
+### `GET /api/v1/timeline`
+Returns paginated chronological events (`event_occurred_at DESC, created_at DESC`) strictly scoped to the authenticated patient.
+- **Query Parameters:** `category`, `start_date`, `end_date`, `q` (search), `review_status`, `limit` (1–200, default 50), `offset` (default 0)
+- **200 OK Response:** `{ "items": [...], "total": 12, "limit": 50, "offset": 0 }`
+
+### `POST /api/v1/timeline/events`
+Records a standalone patient-reported health event on the chronological timeline (`201 Created`).
