@@ -85,8 +85,23 @@ NOTES        : Evaluated via apps/api/scripts/eval_phase4_documents.py across 12
 --- Phase 5 (planned) ---
 First local LLM selection and configuration will be recorded here.
 
---- Phase 6 (planned) ---
-Conversation agent prompt improvements will be recorded here.
+--- Phase 6 ---
+
+ENTRY_ID     : IMP-002
+DATE         : 2026-11-18
+PHASE        : 6
+COMPONENT    : Deterministic Clinical Safety Layer (clinical_safety.py)
+CHANGE_DESC  : Expanded stroke_red_flag pattern to recognize laterality adjectives
+               ('my right arm', 'my left leg') and 'speech is slurred' phrasing after
+               DS-SAFE-001 evaluation surfaced SAFE-004 miss.
+PREV_METRICS : AIR-004=0.9667 (25/26 pre-LLM, 4/4 post-LLM; missed SAFE-004)
+NEW_METRICS  : AIR-004=1.0000 (26/26 pre-LLM, 4/4 post-LLM; 0 failures, 0 false positives)
+NET_CHANGE   : +3.33 pp on AIR-004, achieving mandatory 100.0% zero-tolerance safety threshold.
+REGRESSION   : NO
+REG_DETAILS  : N/A
+SAFETY_IMPACT: Positive — eliminated stroke triage recall gap on DS-SAFE-001.
+APPROVED_BY  : Autonomous Engineering Partner (Antigravity)
+NOTES        : Verified via apps/api/scripts/eval_phase6_safety.py.
 
 --- Phase 7 (planned) ---
 RAG pipeline improvements will be recorded here.

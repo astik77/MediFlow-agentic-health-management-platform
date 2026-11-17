@@ -1,87 +1,72 @@
 MEDIFLOW — BASELINE STATUS
 ===========================
-Version: 1.5.0
+Version: 1.6.0
 Date: 2026-11-18
-Phase: 5 (Local AI Infrastructure)
-Status: PHASES 0, 1, 2, 3, 4 & 5 VERIFIED
+Phase: 6 (AI Health Assistant)
+Status: PHASES 0, 1, 2, 3, 4, 5 & 6 VERIFIED
 
 ================================================================
 EXECUTIVE SUMMARY
 ================================================================
-Phases 0 through 5 are implemented and verified. MEDIFLOW now has a
-complete, local-first AI infrastructure built on pure async httpx
-adapters: OllamaProvider (default: qwen2.5:1.5b + nomic-embed-text for
-Intel Core i3 / 7.7 GB RAM), optional synthetic-only Gemini & Grok
-adapters locked behind the SEC-014 Privacy Firewall, a versioned Prompt
-Registry with SEC-011 untrusted-data boundaries, Pydantic v2 structured
-output validation with automatic retry and SEC-013 patient_id cross-
-checking, SEC-015 structlog secret/transcript redaction, anonymized
-AIInvocationLog persistence, and patient-facing UI integration.
+Phases 0 through 6 are implemented and verified. Patients now have a
+full conversational AI Health Assistant grounded strictly in their own
+longitudinal health records through SEC-012 allowlisted read-only and
+proposal-only tools, protected by a deterministic pre-LLM and post-LLM
+clinical safety triage layer achieving AIR-004 = 100.0% (30/30 on
+DS-SAFE-001), with 1-click patient confirmation for proposed symptom
+drafts and graceful offline fallback when local Ollama is stopped.
 
-AI Health Assistant (Phase 6), Patient-Specific RAG (Phase 7),
-Health Analytics (Phase 8), and Final Release Hardening (Phase 9)
-remain scheduled next.
+Patient-Specific Hybrid RAG (Phase 7), Dashboard Analytics & 7-Day
+Summaries (Phase 8), and Release Hardening (Phase 9) remain next.
 
 ================================================================
 COMPONENT STATUS & BASELINE READINESS
 ================================================================
 
-1. BACKEND API, AUTH, PROFILES, HISTORY, VAULT, OCR & LOCAL AI
+1. BACKEND API, AUTH, HISTORY, VAULT, OCR, LOCAL AI & ASSISTANT
    - Status: IMPLEMENTED & VERIFIED
    - Framework: FastAPI 0.163.1 + Pydantic v2 (Python 3.11)
    - Modules Active: auth, patients, health_records, timeline, documents,
-     documents.pipeline, ai (providers, prompts, safety, service)
-   - Test Results: 131/131 automated tests PASSED (100% pass rate, 79.66s, 0 warnings)
-     - 45 unit tests (config, Argon2id/tokens, Phase 4 pipeline, Phase 5 AI infra)
-     - 58 API integration tests (health, auth, profiles, history, timeline, vault, OCR, AI)
-     - 28 security tests (SEC-001/002, SEC-004–011, SEC-013–018)
+     ai (providers, prompts, safety, agents), conversations
+   - Test Results: 143/143 automated tests PASSED (100% pass rate, 72.45s, 0 warnings)
+     - 51 unit tests | 60 API integration tests | 32 security & safety tests
    - Linting (Ruff): 0 errors across mediflow/, tests/, migrations/, scripts/
 
 2. DATABASE & ORM
-   - Status: PHASE 5 SCHEMA MIGRATIONS READY
-   - Migrations:
-     - 0001_phase1_auth_patients
-     - 0002_phase2_medical_history
-     - 0003_phase3_documents
-     - 0004_phase3_add_document_fk_links
-     - 0005_phase4_document_intelligence
-     - 0006_phase5_ai_infrastructure (ai_invocation_logs)
+   - Status: PHASE 6 SCHEMA MIGRATIONS READY
+   - Migrations: 0001 through 0007_phase6_conversations (conversations, messages)
    - Verification: Alembic upgrade & downgrade SQL verified cleanly
 
 3. FRONTEND APPLICATION
-   - Status: PHASE 5 UI IMPLEMENTED & VERIFIED
+   - Status: PHASE 6 UI IMPLEMENTED & VERIFIED
    - Framework: Next.js 15.3.9 (App Router) + TypeScript + Tailwind CSS
-   - Pages Implemented: /, /login, /register, /forgot-password,
-     /onboarding, /profile (with Local AI & Privacy Status), /health,
-     /documents, /documents/[id] (with AI Plain-Language Summary), /timeline
+   - Pages Implemented: /, /login, /register, /forgot-password, /onboarding,
+     /profile, /health, /documents, /documents/[id], /timeline, /assistant
    - Verification: tsc --noEmit (0 errors), next lint (0 warnings/errors),
-     next build (13/13 static + /documents/[id] dynamic built in 8.0s)
+     next build (14/14 static + /documents/[id] dynamic built in 6.0s)
 
-4. DOCUMENT INTELLIGENCE & OCR BASELINE (PHASE 4 — MEASURED)
-   - OCR-001 (CER): 0.36% | OCR-002 (WER): 4.17% | OCR-003 (Completeness): 100.0%
-   - DC-001..004: 100.0% | NE-001..005: 100.0%
+4. EVALUATION BASELINES
+   - Phase 4 OCR/DC/NE: CER 0.36%, WER 4.17%, Completeness 100%, DC 100%, NE 100%
+   - Phase 5 AIR-001 (Structured Output Harness): 100.0% (20/20 on MockAIProvider)
+   - Phase 6 AIR-004 (Safety Constraint Pass Rate — DS-SAFE-001): 100.0% (30/30, 0 failures)
 
-5. LOCAL AI INFRASTRUCTURE (PHASE 5 — VERIFIED)
-   - Default Model Profile: Ollama qwen2.5:1.5b (generation) + nomic-embed-text (embeddings)
-   - AIR-001 (Structured Output Validity Harness): 100.0% (20/20 on MockAIProvider; live Ollama offline)
-   - Prompt Registry: doc_summary@1.0.0, structured_extraction@1.0.0, health_qa_base@1.0.0
-
-6. SECURITY CONTROLS (SEC-001 through SEC-018)
-   - SEC-001 / SEC-002 (Cross-patient access — Profiles, History, Vault, OCR, AI): PASSED
+5. SECURITY CONTROLS (SEC-001 through SEC-018)
+   - SEC-001 / SEC-002 (Cross-patient access — Profiles, History, Vault, OCR, AI, Conversations): PASSED
    - SEC-004 (Authentication bypass): PASSED
    - SEC-005 / SEC-006 (Expired / revoked sessions): PASSED
    - SEC-007 / SEC-008 / SEC-009 / SEC-010 (Upload MIME, magic bytes, traversal, size): PASSED
    - SEC-011 (Document prompt injection detection & untrusted delimiters): PASSED
+   - SEC-012 (Allowlisted read-only / proposal-only AI tools; arbitrary SQL/tools blocked): PASSED
    - SEC-013 (Invalid / hallucinated foreign patient_id in AI output): PASSED
    - SEC-014 (External AI Privacy Firewall blocking real patient data): PASSED
    - SEC-015 (Sensitive credentials & raw medical transcripts redacted in logs): PASSED
    - SEC-016 (Archive wipes disk file, pages, chunks & unconfirmed candidates): PASSED
    - SEC-017 (Idempotent processing & concurrent active-job lock): PASSED
    - SEC-018 (Immutable provenance & revision history): PASSED
-   - Remaining SEC tests: SEC-003 (Phase 7 RAG), SEC-012 (Phase 6 AI Tools)
+   - Remaining SEC test: SEC-003 (Cross-patient RAG retrieval — Phase 7)
 
 ================================================================
 NEXT MILESTONES
 ================================================================
-- Obtain user approval for Phase 5 Completion
-- Proceed to Phase 6: AI Health Assistant
+- Obtain user approval for Phase 6 Completion
+- Proceed to Phase 7: Patient-Specific Hybrid RAG

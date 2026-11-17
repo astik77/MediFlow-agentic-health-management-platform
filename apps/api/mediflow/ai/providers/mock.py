@@ -45,38 +45,90 @@ class MockAIProvider:
             content = self._responder(request)
         elif request.expect_json:
             pid_match = _PATIENT_ID_RE.search(request.user_prompt)
-            title_match = _TITLE_RE.search(request.user_prompt)
             pid = pid_match.group(1) if pid_match else "00000000-0000-0000-0000-000000000000"
-            title = title_match.group(1).strip() if title_match else "Medical Document"
-            content = json.dumps(
-                {
-                    "patient_id": pid,
-                    "plain_language_summary": (
-                        f"This summary explains the extracted content of '{title}' "
-                        "in plain language for your personal review."
-                    ),
-                    "key_findings": [
-                        "Document text and structured observations were reviewed.",
-                        "Please verify any out-of-range values with your clinician.",
-                    ],
-                    "medical_terms_explained": [
-                        {
-                            "term": "Reference Range",
-                            "explanation": (
-                                "The typical range of values observed in a healthy population "
-                                "for comparison."
-                            ),
-                        }
-                    ],
-                    "questions_for_doctor": [
-                        "How do these results compare with my previous measurements?"
-                    ],
-                    "informational_disclaimer": (
-                        "This summary is strictly informational and does not constitute "
-                        "medical advice, diagnosis, or treatment."
-                    ),
-                }
-            )
+            if "Latest Patient Message:" in request.user_prompt:
+                # Phase 6 AI Health Assistant deterministic response
+                user_msg = request.user_prompt.split("Latest Patient Message:", 1)[1].strip()
+                mentions_symptom = any(
+                    k in user_msg.lower()
+                    for k in (
+                        "headache",
+                        "fever",
+                        "fatigue",
+                        "cough",
+                        "nausea",
+                        "dizziness",
+                        "pain",
+                    )
+                )
+                content = json.dumps(
+                    {
+                        "patient_id": pid,
+                        "reply": (
+                            "Based on your recorded personal health history, I have reviewed "
+                            "your active conditions, allergies, recent symptoms, and confirmed "
+                            "observations to help answer your question."
+                        ),
+                        "clarifying_questions": (
+                            [
+                                "When did this symptom first start?",
+                                "How would you rate its severity (mild, moderate, or severe)?",
+                            ]
+                            if mentions_symptom
+                            else []
+                        ),
+                        "cited_record_ids": [],
+                        "proposed_symptom": (
+                            {
+                                "name": "Headache"
+                                if "headache" in user_msg.lower()
+                                else "Reported Symptom",
+                                "severity": "moderate",
+                                "body_location": "head" if "headache" in user_msg.lower() else None,
+                                "frequency": None,
+                                "notes": "Proposed from health assistant conversation",
+                            }
+                            if mentions_symptom
+                            else None
+                        ),
+                        "informational_disclaimer": (
+                            "This response is strictly informational and is not medical advice, "
+                            "a diagnosis, or a prescription."
+                        ),
+                    }
+                )
+            else:
+                title_match = _TITLE_RE.search(request.user_prompt)
+                title = title_match.group(1).strip() if title_match else "Medical Document"
+                content = json.dumps(
+                    {
+                        "patient_id": pid,
+                        "plain_language_summary": (
+                            f"This summary explains the extracted content of '{title}' "
+                            "in plain language for your personal review."
+                        ),
+                        "key_findings": [
+                            "Document text and structured observations were reviewed.",
+                            "Please verify any out-of-range values with your clinician.",
+                        ],
+                        "medical_terms_explained": [
+                            {
+                                "term": "Reference Range",
+                                "explanation": (
+                                    "The typical range of values observed in a healthy population "
+                                    "for comparison."
+                                ),
+                            }
+                        ],
+                        "questions_for_doctor": [
+                            "How do these results compare with my previous measurements?"
+                        ],
+                        "informational_disclaimer": (
+                            "This summary is strictly informational and does not constitute "
+                            "medical advice, diagnosis, or treatment."
+                        ),
+                    }
+                )
         else:
             content = "Informational response generated by local mock provider."
 

@@ -139,10 +139,10 @@ Patient Portal will be live at: `http://localhost:3000`
   - Private patient-isolated document vault, MIME & magic-byte signature validation (SEC-007/008), UUID path-traversal prevention (SEC-009), streaming size enforcement (SEC-010), SHA-256 integrity hashing, secure file download, soft-archive with disk deletion (SEC-016), FK links from health records, Document Vault UI, 91/91 backend tests passing.
 - [x] **Phase 4: Document Intelligence & OCR**
   - PyMuPDF digital text & rasterization, Pillow/OpenCV preprocessing, local RapidOCR ONNX engine, SEC-011 prompt-injection quarantine, deterministic medical classifier, clinical date/unit/observation parser, page-anchored RAG chunking, idempotent processing jobs (SEC-017), archive sync (SEC-016), two-pane Document Extraction & Candidate Review UI, synthetic evaluation baseline (CER 0.36%, WER 4.17%, 100% classification & extraction), 113/113 backend tests passing.
-- [x] **Phase 5: Local AI Infrastructure** *(Current)*
+- [x] **Phase 5: Local AI Infrastructure**
   - Local-first Ollama provider (`qwen2.5:1.5b` + `nomic-embed-text`), optional synthetic-only Gemini/Grok adapters locked behind SEC-014 Privacy Firewall, versioned Prompt Registry with SEC-011 untrusted-data boundaries, Pydantic v2 structured output validator with retry & SEC-013 patient_id guard, SEC-015 structlog secret/transcript redaction, anonymized `ai_invocation_logs`, AI Plain-Language Document Summary & AI Privacy Status UI, 131/131 backend tests passing.
-- [ ] **Phase 6: AI Health Assistant**
-  - Patient conversation agent, symptom clarification, safety escalation filters.
+- [x] **Phase 6: AI Health Assistant** *(Current)*
+  - Patient-scoped conversational AI Health Assistant (`conversations`, `messages`), deterministic pre/post-LLM clinical safety & emergency escalation layer (`AIR-004 = 100%` on `DS-SAFE-001`), SEC-012 allowlisted read-only & proposal-only tool registry, symptom clarification & 1-click patient-confirmed symptom drafts, graceful offline Ollama fallback, `/assistant` UI, 143/143 backend tests passing.
 - [ ] **Phase 7: Patient-Specific RAG**
   - Hybrid full-text + pgvector search, citation grounding, cross-patient isolation verification.
 - [ ] **Phase 8: Dashboard Analytics & Health Insights**

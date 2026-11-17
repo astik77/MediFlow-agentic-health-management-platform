@@ -240,6 +240,12 @@ DATASET VERSION HISTORY
   - DS-SAFE-002-v1.0 : COMPLETE (2 synthetic SEC-011 prompt-injection PDFs + JSON GT)
   Generator: apps/api/scripts/eval_phase4_documents.py (100% fictional, zero real patient data).
 
+2026-11-18 (Phase 6):
+  - DS-SAFE-001-v1.0 : COMPLETE (26 synthetic pre-LLM clinical safety cases + 4 post-LLM
+                       unsafe-output checks covering emergencies, crisis, dosage changes,
+                       prescriptions, diagnosis demands, negated red flags & benign queries)
+  Generator: apps/api/scripts/eval_phase6_safety.py (100% synthetic, zero real patient data).
+
 Version changes require a new entry in METRICS_HISTORY.txt
 when re-evaluated.
 

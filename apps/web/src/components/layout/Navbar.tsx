@@ -10,6 +10,7 @@ import {
   HeartPulse,
   FileText,
   Clock,
+  MessageSquareHeart,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 
@@ -43,7 +44,7 @@ export function Navbar() {
                 MEDIFLOW
               </span>
               <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#2457A6] border border-blue-200 hidden sm:inline">
-                Phase 5
+                Phase 6
               </span>
             </div>
           </Link>
@@ -60,7 +61,11 @@ export function Navbar() {
               </Link>
               <Link href="/timeline" className={navLinkClass("/timeline")}>
                 <Clock className="w-4 h-4 text-[#2457A6]" />
-                Medical Timeline
+                Timeline
+              </Link>
+              <Link href="/assistant" className={navLinkClass("/assistant")}>
+                <MessageSquareHeart className="w-4 h-4 text-[#2457A6]" />
+                AI Assistant
               </Link>
             </nav>
           )}
@@ -91,6 +96,13 @@ export function Navbar() {
               >
                 <Clock className="w-4 h-4 text-[#2457A6]" />
                 Timeline
+              </Link>
+              <Link
+                href="/assistant"
+                className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-[#172033] hover:bg-slate-100"
+              >
+                <MessageSquareHeart className="w-4 h-4 text-[#2457A6]" />
+                AI
               </Link>
               {!isOnboarded && (
                 <Link

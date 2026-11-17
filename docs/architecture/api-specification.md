@@ -285,3 +285,30 @@ Generates a schema-validated, plain-language, strictly informational summary of 
   - Cross-checks emitted `patient_id` against authenticated session (`SEC-013`, rejects mismatch with `422`)
   - Persists anonymized telemetry row to `ai_invocation_logs`
 - **200 OK:** `DocumentSummaryApiResponse` (`409 Conflict` if unprocessed/archived, `503 Service Unavailable` if Ollama offline)
+
+---
+
+## 9. AI Health Assistant & Conversations (`/api/v1/conversations`)
+
+All endpoints require authentication (`401 Unauthorized`) and enforce strict cross-patient ownership (`403 Forbidden` — `SEC-001/SEC-002`). Assistant turns execute deterministic pre-LLM emergency & clinical-boundary safety triage (`AIR-004 = 100%`), read patient context strictly via `SEC-012` allowlisted read-only tools, and never autonomously write records to medical history.
+
+### `POST /api/v1/conversations`
+Creates a new active patient-scoped conversation (`201 Created`).
+
+### `GET /api/v1/conversations?include_archived=false`
+Lists the authenticated patient's conversations ordered by `last_message_at DESC`.
+
+### `GET /api/v1/conversations/{conversation_id}`
+Returns the conversation metadata and its chronological `messages` array (with `safety_level`, `cited_records_json`, `clarifying_questions_json`, and `proposed_action_json`).
+
+### `DELETE /api/v1/conversations/{conversation_id}`
+Soft-archives a conversation (`is_archived = true`, `status = "archived"`). Returns `409 Conflict` if already archived.
+
+### `POST /api/v1/conversations/{conversation_id}/messages`
+Posts a patient message and generates a safety-checked, record-grounded AI Health Assistant reply (`201 Created`).
+- Emergency red flags immediately return `safety_level = "emergency_escalation"` with helpline guidance (`112` / `108` / Tele-MANAS `14416`), bypassing LLM latency.
+- Prescribing, dosage-change, and diagnosis requests deterministically return `safety_level = "boundary_refusal"`.
+- Gracefully falls back to record-grounded mode if local Ollama is offline.
+
+### `POST /api/v1/conversations/{conversation_id}/messages/{message_id}/proposal`
+Applies the patient's explicit decision (`"accept"` or `"dismiss"`) to an AI-proposed symptom draft. Accepting creates a `PatientSymptom` (`source_type = "ai_proposed"`, `review_status = "confirmed"`) with an immutable `RecordRevision` and `HealthEvent` on the Medical Timeline. Returns `409 Conflict` if already resolved.

@@ -125,6 +125,39 @@ _register(
     )
 )
 
+_register(
+    PromptTemplate(
+        prompt_id="health_assistant",
+        version="1.0.0",
+        task_type="health_assistant_turn",
+        description=(
+            "Longitudinal patient-scoped AI Health Assistant with symptom clarification, "
+            "record citations, and proposal-only symptom drafts."
+        ),
+        system_prompt=(
+            f"{SAFETY_PREAMBLE}\n"
+            "Use ONLY the provided patient records and conversation history. "
+            "Never invent labs, dates, or IDs. If the patient describes a new or vague symptom, "
+            "ask 1-3 focused clarifying questions (onset, severity, duration, triggers) and "
+            "optionally propose a structured symptom draft for the patient to confirm.\n"
+            "Return ONLY a JSON object with keys: "
+            '{"patient_id": "<uuid>", "reply": "<helpful informational response>", '
+            '"clarifying_questions": ["..."], '
+            '"cited_record_ids": ["<uuid>", ...], '
+            '"proposed_symptom": null | {"name": "...", "severity": "mild|moderate|severe", '
+            '"body_location": null | "...", "frequency": null | "...", "notes": null | "..."}, '
+            '"informational_disclaimer": "<informational only, not medical advice>"}.'
+        ),
+        user_template=(
+            "Patient ID: {patient_id}\n\n"
+            "Authenticated Patient Records:\n{patient_context}\n\n"
+            "Recent Conversation History:\n{conversation_history}\n\n"
+            "Latest Patient Message:\n{user_message}\n\n"
+            "Respond with valid JSON matching the schema."
+        ),
+    )
+)
+
 
 def get_prompt(prompt_id: str, version: str | None = None) -> PromptTemplate:
     """Fetch a registered prompt template by ID (defaults to latest registered version)."""

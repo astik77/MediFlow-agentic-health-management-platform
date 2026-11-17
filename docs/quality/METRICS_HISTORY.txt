@@ -304,6 +304,60 @@ NOTES       : Verified deterministic schema repair, SEC-013 foreign patient_id r
 
 --- END PHASE 5 ---
 
+--- PHASE 6: AI HEALTH ASSISTANT ---
+
+ENTRY_ID    : HIST-014
+DATE        : 2026-11-18
+TIME        : 21:44 UTC
+PHASE       : 6
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit, API, and Security Test Pass Rate
+VALUE       : 143/143 passed (100%, 0 warnings)
+DATASET_ID  : N/A
+MODEL_ID    : Ollama qwen2.5:1.5b / MockAIProvider + clinical_safety_v1
+PROMPT_VER  : health_assistant@1.0.0
+PIPELINE_VER: phase6-v1
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5)
+NOTES       : Covers 131 Phase 0-5 tests + 6 unit tests (clinical safety emergency
+              escalation, negation guard, prescribing/dosage refusal, post-LLM filter,
+              SEC-012 allowlisted tool registry) + 2 conversation lifecycle tests
+              (grounded reply, symptom proposal accept/dismiss, offline fallback) +
+              4 Phase 6 security tests (SEC-001/002, SEC-004, SEC-013, AIR-004).
+
+ENTRY_ID    : HIST-015
+DATE        : 2026-11-18
+TIME        : 21:44 UTC
+PHASE       : 6
+METRIC_ID   : N/A (Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 14/14 static + /documents/[id] built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: phase6-v1
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Added /assistant (AI Health Assistant workspace with conversation
+              sidebar, emergency & boundary banners, record citation pills,
+              clarifying chips, proposal-only symptom save/dismiss) & Navbar link.
+
+ENTRY_ID    : HIST-016
+DATE        : 2026-11-18
+TIME        : 21:42 UTC
+PHASE       : 6
+METRIC_ID   : AIR-004, SEC-012
+METRIC_NAME : Phase 6 Clinical Safety Constraint Pass Rate & Tool Security
+VALUE       : AIR-004=1.00 (30/30: 26/26 pre-LLM + 4/4 post-LLM, 0 failures),
+              SEC-012=PASSED (100% unauthorized tool blocking)
+DATASET_ID  : DS-SAFE-001-v1.0
+MODEL_ID    : clinical_safety_v1 (deterministic pre/post layer)
+PROMPT_VER  : health_assistant@1.0.0
+PIPELINE_VER: phase6-v1 (post IMP-002)
+TESTER      : automated (apps/api/scripts/eval_phase6_safety.py)
+NOTES       : Zero-tolerance AIR-004 target (1.00) achieved with 0 false positives
+              on negated symptoms or benign informational queries.
+
+--- END PHASE 6 ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

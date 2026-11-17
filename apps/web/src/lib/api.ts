@@ -3,6 +3,12 @@ import type {
   DocumentSummaryApiResponse,
 } from "@/types/ai";
 import type {
+  ConversationDetail,
+  ConversationItem,
+  ConversationMessage,
+  MessageTurnResponse,
+} from "@/types/conversations";
+import type {
   AuthStatus,
   LoginPayload,
   OnboardingPayload,
@@ -468,5 +474,51 @@ export const aiApi = {
     apiRequest<DocumentSummaryApiResponse>(
       `/api/v1/ai/documents/${documentId}/summarize`,
       { method: "POST" }
+    ),
+};
+
+export const conversationsApi = {
+  list: (includeArchived = false): Promise<ConversationItem[]> =>
+    apiRequest<ConversationItem[]>(
+      `/api/v1/conversations${includeArchived ? "?include_archived=true" : ""}`
+    ),
+
+  create: (title?: string): Promise<ConversationItem> =>
+    apiRequest<ConversationItem>("/api/v1/conversations", {
+      method: "POST",
+      body: JSON.stringify(title ? { title } : {}),
+    }),
+
+  getDetail: (id: string): Promise<ConversationDetail> =>
+    apiRequest<ConversationDetail>(`/api/v1/conversations/${id}`),
+
+  archive: (id: string): Promise<ConversationItem> =>
+    apiRequest<ConversationItem>(`/api/v1/conversations/${id}`, {
+      method: "DELETE",
+    }),
+
+  sendMessage: (
+    conversationId: string,
+    content: string
+  ): Promise<MessageTurnResponse> =>
+    apiRequest<MessageTurnResponse>(
+      `/api/v1/conversations/${conversationId}/messages`,
+      {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      }
+    ),
+
+  resolveProposal: (
+    conversationId: string,
+    messageId: string,
+    decision: "accept" | "dismiss"
+  ): Promise<ConversationMessage> =>
+    apiRequest<ConversationMessage>(
+      `/api/v1/conversations/${conversationId}/messages/${messageId}/proposal`,
+      {
+        method: "POST",
+        body: JSON.stringify({ decision }),
+      }
     ),
 };

@@ -1,0 +1,78 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_007_2026-11-18
+Date          : 2026-11-18
+Time (UTC)    : 21:44
+Phase         : 6 (AI Health Assistant)
+Component     : Clinical Safety Triage (AIR-004), SEC-012 Allowlisted AI Tool Registry, HealthAssistantAgent, Conversations & Messages API, AI Assistant UI (/assistant)
+Test Type     : Unit, API Integration, Safety Evaluation (DS-SAFE-001), Security & Isolation (SEC-001/002, SEC-004, SEC-012, SEC-013, AIR-004), Migration SQL, Frontend Type-Check, Lint & Build
+Environment   : local-dev (Windows 11, x86_64, Intel Core i3-1005G1, 7.7 GB RAM)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1, tsc, next lint, next build 15.3.9)
+Run Duration  : Backend full suite: 72.45s | Frontend build: 6.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : Phase 6 Completion (v1.6.0)
+Dataset Version   : DS-SAFE-001-v1.0 (26 pre-LLM + 4 post-LLM safety cases)
+Model ID/Version  : Ollama qwen2.5:1.5b / MockAIProvider + clinical_safety_v1
+Prompt Version    : health_assistant@1.0.0
+Pipeline Version  : phase6-v1
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+
+---
+SUMMARY
+---
+Backend Tests Collected : 143
+Backend Tests Passed    : 143
+Backend Tests Failed    : 0
+Backend Tests Skipped   : 0
+Backend Warnings        : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : PASSED (All checks passed!, 0 errors)
+Alembic Migration 0007  : PASSED (upgrade 0006:head --sql & downgrade head:0006 --sql verified)
+Safety Eval (AIR-004)   : PASSED (30/30 = 100.0%, ZERO failures)
+
+Frontend Type-Check     : PASSED (tsc --noEmit: 0 errors)
+Frontend ESLint         : PASSED (next lint: 0 warnings, 0 errors)
+Frontend Build          : PASSED (next build: 14/14 static pages + dynamic /documents/[id] built)
+
+Overall Result          : PASSED
+
+---
+TEST RESULTS (Detailed — Phase 6 Additions)
+---
+Test ID       | Test Name                                                           | Result | Notes
+--------------|---------------------------------------------------------------------|--------|------
+U-P6-001..006 | tests/unit/test_clinical_safety_and_tools.py (6 unit tests)         | PASSED | Emergency escalation, negation guard, prescribing/dosage refusal, post-LLM filter, SEC-012 tool blocking & allowlist
+CONV-001      | test_conversation_lifecycle_grounded_reply_and_symptom_proposal     | PASSED | Create, send grounded message, clarifying questions, citations, accept proposal -> PatientSymptom + RecordRevision, archive
+CONV-002      | test_assistant_graceful_fallback_when_ollama_offline                | PASSED | Clean offline record-grounded fallback + proposal dismissal
+S-022         | test_sec004_unauthenticated_conversations_rejected                  | PASSED | 401 across all /api/v1/conversations/* routes
+S-023         | test_sec001_002_cross_patient_conversation_isolation                | PASSED | Patient B gets empty list and 403 on GET/POST/proposal/DELETE
+S-024         | test_air004_emergency_and_boundary_safety_over_http                 | PASSED | Emergency red flag bypasses LLM (112 guidance); dosage change refused
+S-025         | test_sec013_assistant_rejects_hallucinated_foreign_patient_id       | PASSED | Foreign UUID intercepted safely without leaking text
+E-P6-001      | scripts/eval_phase6_safety.py (DS-SAFE-001-v1.0)                    | PASSED | 26/26 pre-LLM + 4/4 post-LLM = 100.0% AIR-004 (post IMP-002)
+F-012         | apps/web pnpm type-check && pnpm lint && pnpm build                 | PASSED | 0 errors; /assistant (4.34 kB) built cleanly
+M-009         | alembic upgrade/downgrade 0007_phase6_conversations --sql           | PASSED | Valid PostgreSQL DDL for conversations & messages + composite indexes
+
+(All 131 Phase 0–5 tests also re-executed and PASSED.)
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline (HIST-011/012/013): 131/131 backend tests passed (100%), 13 static routes
+Current run (HIST-014/015/016): 143/143 backend tests passed (100%), 14 static + 1 dynamic route, AIR-004=100%
+Change: +12 Phase 6 tests, +1 frontend route (/assistant), SEC-012 & AIR-004 verified, zero regressions.
+
+---
+REGRESSIONS
+---
+No regressions detected.
+
+---
+APPROVAL
+---
+Approved for Phase 6 Completion: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-18
