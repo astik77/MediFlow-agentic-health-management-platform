@@ -1,0 +1,42 @@
+{
+  "dataset_id": "DS-LAB-001",
+  "document_id": "lab-003",
+  "file_path": "C:\\Astik\\Projects\\MediFlow-agentic-health-management-platform\\test-data\\synthetic\\DS-LAB-001\\documents\\lab-003.pdf",
+  "mime_type": "application/pdf",
+  "document_type": "lab_report",
+  "expected_date": "2026-09-18",
+  "expected_text": "SYNTHETIC DIAGNOSTIC LABORATORY REPORT\nComplete Blood Count & Metabolic Panel\nReport Date: 18-Sep-2026\nTest Name   Result   Unit   Reference Range\nTSH   4.8   mIU/L   0.4 - 4.0\nALT   32   U/L   7 - 56\nAST   28   U/L   10 - 40\nTotal Bilirubin   0.8   mg/dL   0.1 - 1.2\nTriglycerides   162   mg/dL   < 150",
+  "expected_observations": [
+    {
+      "test_name": "TSH",
+      "value": "4.8",
+      "unit": "mIU/L",
+      "reference_range": "0.4 - 4.0"
+    },
+    {
+      "test_name": "ALT",
+      "value": "32",
+      "unit": "U/L",
+      "reference_range": "7 - 56"
+    },
+    {
+      "test_name": "AST",
+      "value": "28",
+      "unit": "U/L",
+      "reference_range": "10 - 40"
+    },
+    {
+      "test_name": "Total Bilirubin",
+      "value": "0.8",
+      "unit": "mg/dL",
+      "reference_range": "0.1 - 1.2"
+    },
+    {
+      "test_name": "Triglycerides",
+      "value": "162",
+      "unit": "mg/dL",
+      "reference_range": "< 150"
+    }
+  ],
+  "expect_injection": false
+}

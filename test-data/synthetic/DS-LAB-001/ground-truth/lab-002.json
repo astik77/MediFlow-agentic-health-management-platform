@@ -1,0 +1,42 @@
+{
+  "dataset_id": "DS-LAB-001",
+  "document_id": "lab-002",
+  "file_path": "C:\\Astik\\Projects\\MediFlow-agentic-health-management-platform\\test-data\\synthetic\\DS-LAB-001\\documents\\lab-002.pdf",
+  "mime_type": "application/pdf",
+  "document_type": "lab_report",
+  "expected_date": "2026-11-05",
+  "expected_text": "SYNTHETIC DIAGNOSTIC LABORATORY REPORT\nComplete Blood Count & Metabolic Panel\nReport Date: 05/11/2026\nTest Name   Result   Unit   Reference Range\nHemoglobin   11.2   g/dL   12.0 - 16.0\nHbA1c   6.8   %   4.0 - 5.6\nTotal Cholesterol   228   mg/dL   < 200\nLDL Cholesterol   148   mg/dL   < 100\nHDL Cholesterol   46   mg/dL   > 40",
+  "expected_observations": [
+    {
+      "test_name": "Hemoglobin",
+      "value": "11.2",
+      "unit": "g/dL",
+      "reference_range": "12.0 - 16.0"
+    },
+    {
+      "test_name": "HbA1c",
+      "value": "6.8",
+      "unit": "%",
+      "reference_range": "4.0 - 5.6"
+    },
+    {
+      "test_name": "Total Cholesterol",
+      "value": "228",
+      "unit": "mg/dL",
+      "reference_range": "< 200"
+    },
+    {
+      "test_name": "LDL Cholesterol",
+      "value": "148",
+      "unit": "mg/dL",
+      "reference_range": "< 100"
+    },
+    {
+      "test_name": "HDL Cholesterol",
+      "value": "46",
+      "unit": "mg/dL",
+      "reference_range": "> 40"
+    }
+  ],
+  "expect_injection": false
+}

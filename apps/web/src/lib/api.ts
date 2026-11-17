@@ -8,8 +8,11 @@ import type {
   User,
 } from "@/types/auth";
 import type {
+  CandidateReviewPayload,
+  DocumentExtractionResponse,
   DocumentItem,
   DocumentListResponse,
+  DocumentProcessingJob,
   DocumentUpdatePayload,
   DocumentUploadPayload,
 } from "@/types/documents";
@@ -305,6 +308,8 @@ export const healthRecordsApi = {
     apiRequest<RecordRevision[]>(
       `/api/v1/health-records/observations/${id}/history`
     ),
+  listPendingCandidates: (): Promise<HealthObservation[]> =>
+    apiRequest<HealthObservation[]>("/api/v1/health-records/candidates"),
 };
 
 export const timelineApi = {
@@ -425,4 +430,26 @@ export const documentsApi = {
 
   getDownloadUrl: (id: string): string =>
     `${API_BASE_URL}/api/v1/documents/${id}/download`,
+
+  process: (id: string, force = false): Promise<DocumentProcessingJob> =>
+    apiRequest<DocumentProcessingJob>(
+      `/api/v1/documents/${id}/process${force ? "?force=true" : ""}`,
+      { method: "POST" }
+    ),
+
+  getExtraction: (id: string): Promise<DocumentExtractionResponse> =>
+    apiRequest<DocumentExtractionResponse>(`/api/v1/documents/${id}/extraction`),
+
+  reviewCandidate: (
+    documentId: string,
+    observationId: string,
+    payload: CandidateReviewPayload
+  ): Promise<HealthObservation> =>
+    apiRequest<HealthObservation>(
+      `/api/v1/documents/${documentId}/candidates/${observationId}/review`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    ),
 };

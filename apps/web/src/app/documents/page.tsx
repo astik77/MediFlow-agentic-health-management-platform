@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -16,6 +17,7 @@ import {
   X,
   Calendar,
   ShieldCheck,
+  Sparkles,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -622,6 +624,11 @@ export default function DocumentsPage() {
                         <span>File: {doc.original_filename}</span>
                         <span>{formatFileSize(doc.file_size_bytes)}</span>
                         <span>{doc.mime_type}</span>
+                        {doc.page_count !== null && (
+                          <span className="font-medium text-[#2457A6]">
+                            {doc.page_count} page{doc.page_count === 1 ? "" : "s"}
+                          </span>
+                        )}
                         {doc.document_date && (
                           <span className="inline-flex items-center gap-1 text-[#172033] font-medium">
                             <Calendar className="w-3.5 h-3.5 text-[#2457A6]" />
@@ -642,9 +649,17 @@ export default function DocumentsPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
                       {!doc.is_archived && (
                         <>
+                          <Link
+                            href={`/documents/${doc.id}`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#2457A6] hover:bg-[#1D4688] text-white transition-colors shadow-sm"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Inspect &amp; Extract
+                          </Link>
+
                           <button
                             type="button"
                             onClick={() => handleDownload(doc)}

@@ -14,11 +14,13 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
     String,
     Text,
+    UniqueConstraint,
     Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -117,3 +119,123 @@ class Document(Base):
 # Efficient patient-scoped chronological queries
 Index("ix_documents_patient_uploaded", Document.patient_id, Document.uploaded_at.desc())
 Index("ix_documents_patient_type", Document.patient_id, Document.document_type)
+
+
+class DocumentPage(Base):
+    """
+    Page-level extracted text and OCR telemetry for an uploaded document.
+    Strictly scoped to patient_id for isolation and cascaded on document deletion.
+    """
+
+    __tablename__ = "document_pages"
+    __table_args__ = (
+        UniqueConstraint("document_id", "page_number", name="uq_document_pages_doc_page"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    patient_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("patient_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    extraction_method: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # pymupdf_text | rapidocr | hybrid | failed
+    raw_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    ocr_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    char_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    layout_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
+class DocumentChunk(Base):
+    """
+    Page-anchored text chunks derived from extracted document pages.
+    Ready for Phase 7 pgvector embeddings and hybrid RAG retrieval.
+    """
+
+    __tablename__ = "document_chunks"
+    __table_args__ = (
+        UniqueConstraint("document_id", "chunk_index", name="uq_document_chunks_doc_idx"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    patient_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("patient_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_start: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_end: Mapped[int] = mapped_column(Integer, nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    token_estimate: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    section_heading: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    metadata_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
+class DocumentProcessingJob(Base):
+    """
+    Tracks document intelligence execution, retries, and idempotency (SEC-017).
+    """
+
+    __tablename__ = "document_processing_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    patient_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("patient_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    pipeline_version: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(32), default="queued", nullable=False, index=True
+    )  # queued | running | completed | failed
+    attempt_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metrics_json: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now, nullable=False
+    )
+
+
+Index("ix_document_pages_patient_doc", DocumentPage.patient_id, DocumentPage.document_id)
+Index("ix_document_chunks_patient_doc", DocumentChunk.patient_id, DocumentChunk.document_id)
+Index(
+    "ix_document_jobs_doc_created",
+    DocumentProcessingJob.document_id,
+    DocumentProcessingJob.created_at.desc(),
+)

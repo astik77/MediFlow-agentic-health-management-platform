@@ -1,0 +1,30 @@
+{
+  "dataset_id": "DS-LAB-002",
+  "document_id": "scan-002",
+  "file_path": "C:\\Astik\\Projects\\MediFlow-agentic-health-management-platform\\test-data\\synthetic\\DS-LAB-002\\documents\\scan-002.png",
+  "mime_type": "image/png",
+  "document_type": "lab_report",
+  "expected_date": "2026-11-02",
+  "expected_text": "SYNTHETIC LABORATORY REPORT\nReport Date: 2026-11-02\nHbA1c: 6.2 % (4.0 - 5.6)\nTotal Cholesterol: 192 mg/dL (< 200)\nTSH: 2.4 mIU/L (0.4 - 4.0)",
+  "expected_observations": [
+    {
+      "test_name": "HbA1c",
+      "value": "6.2",
+      "unit": "%",
+      "reference_range": "4.0 - 5.6"
+    },
+    {
+      "test_name": "Total Cholesterol",
+      "value": "192",
+      "unit": "mg/dL",
+      "reference_range": "< 200"
+    },
+    {
+      "test_name": "TSH",
+      "value": "2.4",
+      "unit": "mIU/L",
+      "reference_range": "0.4 - 4.0"
+    }
+  ],
+  "expect_injection": false
+}

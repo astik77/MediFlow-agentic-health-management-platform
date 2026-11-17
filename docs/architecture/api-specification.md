@@ -240,4 +240,27 @@ Streams the document file as an attachment (`Content-Disposition: attachment; fi
 Updates mutable metadata (`title`, `description`, `document_type`, `document_date`, `review_status`). Returns `409 Conflict` if the document is archived.
 
 ### `DELETE /api/v1/documents/{document_id}`
-Soft-archives the document: marks `is_archived = true`, sets `upload_status = "archived"`, deletes the physical file from disk, and logs an archival event on the timeline while preserving audit metadata. Returns `409 Conflict` if already archived.
+Soft-archives the document: marks `is_archived = true`, sets `upload_status = "archived"`, deletes the physical file from disk, wipes derived `document_pages` and `document_chunks`, archives unconfirmed `candidate` observations (preserving patient-confirmed historical records), and logs an archival event on the timeline (`SEC-016`). Returns `409 Conflict` if already archived.
+
+---
+
+## 7. Document Intelligence, OCR & Candidate Review (Phase 4)
+
+### `POST /api/v1/documents/{document_id}/process`
+Runs the local-first document intelligence pipeline (PyMuPDF digital text extraction / rasterization, Pillow + OpenCV preprocessing, RapidOCR ONNX inference, `SEC-011` prompt-injection scanner, deterministic medical document classifier, clinical date/unit/observation parser, and page-anchored chunker).
+- **Query Parameters:** `force` (boolean, default `false`)
+- **Idempotency (`SEC-017`):** Returns the existing completed `DocumentProcessingJob` if already processed for the current `pipeline_version` when `force=false`. Rejects concurrent runs with `409 Conflict`. Re-processing with `force=true` refreshes pages, chunks, and unconfirmed candidates while preserving patient-confirmed observations.
+- **200 OK:** `DocumentProcessingJobResponse`
+
+### `GET /api/v1/documents/{document_id}/extraction`
+Returns the document metadata, latest processing job, per-page extracted text & OCR confidence (`document_pages`), RAG-ready page-anchored chunks (`document_chunks`), classification summary, `SEC-011` security flags, and linked extracted/confirmed `HealthObservation` records.
+- **200 OK:** `DocumentExtractionResponse` (`403 Forbidden` on cross-patient access)
+
+### `POST /api/v1/documents/{document_id}/candidates/{observation_id}/review`
+Applies explicit patient governance over an extracted `candidate` observation (extracted observations are never auto-confirmed).
+- **Request Body:** `{ "action": "confirm" | "edit_confirm" | "reject", "display_name"?, "value_raw"?, "unit_raw"?, "reference_range_text"?, "abnormality_flag"?, "observed_at"?, "notes"?, "reason"? }`
+- **Side Effects:** Appends an immutable `RecordRevision` snapshot, creates a `HealthEvent` on confirmation, and automatically transitions `document.review_status` to `"reviewed"` once all candidates for the document are finalized.
+- **200 OK:** Updated `ObservationResponse` (`409 Conflict` if already finalized)
+
+### `GET /api/v1/health-records/candidates`
+Returns all active unreviewed `review_status = "candidate"` observations across the authenticated patient's documents to power the patient review queue.

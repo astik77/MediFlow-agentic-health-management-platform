@@ -43,7 +43,7 @@ export function Navbar() {
                 MEDIFLOW
               </span>
               <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#2457A6] border border-blue-200 hidden sm:inline">
-                Phase 3
+                Phase 4
               </span>
             </div>
           </Link>

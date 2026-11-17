@@ -17,14 +17,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from mediflow.core.config import get_settings
 from mediflow.core.database import get_db
 from mediflow.core.dependencies import get_current_patient
+from mediflow.modules.documents.intelligence_service import DocumentIntelligenceService
 from mediflow.modules.documents.schemas import (
+    CandidateReviewRequest,
+    DocumentChunkResponse,
+    DocumentExtractionResponse,
     DocumentListResponse,
+    DocumentPageResponse,
+    DocumentProcessingJobResponse,
     DocumentResponse,
     DocumentType,
     DocumentUpdateRequest,
     ReviewStatus,
 )
 from mediflow.modules.documents.service import DocumentService
+from mediflow.modules.health_records.schemas import ObservationResponse
 from mediflow.modules.patients.models import PatientProfile
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -241,3 +248,92 @@ async def archive_document(
         patient=current_patient,
     )
     return DocumentResponse.model_validate(doc)
+
+
+# ---------------------------------------------------------------------------
+# Phase 4: Document Intelligence (Process, Extraction View, Candidate Review)
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/{document_id}/process",
+    response_model=DocumentProcessingJobResponse,
+    summary="Run document intelligence & OCR pipeline on an uploaded document",
+)
+async def process_document(
+    document_id: uuid.UUID,
+    force: bool = Query(
+        default=False,
+        description="Re-process even if already completed for current pipeline version",
+    ),
+    db: AsyncSession = Depends(get_db),
+    current_patient: PatientProfile = Depends(get_current_patient),
+) -> DocumentProcessingJobResponse:
+    """
+    Execute PDF text extraction / RapidOCR, SEC-011 prompt injection scan,
+    document classification, clinical observation parsing, and chunking.
+    Idempotent by default (SEC-017).
+    """
+    job = await DocumentIntelligenceService.process_document(
+        db=db,
+        document_id=document_id,
+        patient=current_patient,
+        storage_root=_storage_root(),
+        force=force,
+    )
+    return DocumentProcessingJobResponse.model_validate(job)
+
+
+@router.get(
+    "/{document_id}/extraction",
+    response_model=DocumentExtractionResponse,
+    summary="Inspect extracted pages, chunks, classification, and candidate observations",
+)
+async def get_document_extraction(
+    document_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_patient: PatientProfile = Depends(get_current_patient),
+) -> DocumentExtractionResponse:
+    """Return full extraction artifacts and candidate observations for patient review."""
+    data = await DocumentIntelligenceService.get_extraction(
+        db=db,
+        document_id=document_id,
+        patient=current_patient,
+    )
+    return DocumentExtractionResponse(
+        document=DocumentResponse.model_validate(data["document"]),
+        latest_job=(
+            DocumentProcessingJobResponse.model_validate(data["latest_job"])
+            if data["latest_job"] is not None
+            else None
+        ),
+        pages=[DocumentPageResponse.model_validate(p) for p in data["pages"]],
+        chunks_count=data["chunks_count"],
+        chunks=[DocumentChunkResponse.model_validate(c) for c in data["chunks"]],
+        observations=[ObservationResponse.model_validate(o) for o in data["observations"]],
+        classification=data["classification"],
+        security_flags=data["security_flags"],
+    )
+
+
+@router.post(
+    "/{document_id}/candidates/{observation_id}/review",
+    response_model=ObservationResponse,
+    summary="Confirm, edit & confirm, or reject a candidate extracted observation",
+)
+async def review_candidate_observation(
+    document_id: uuid.UUID,
+    observation_id: uuid.UUID,
+    payload: CandidateReviewRequest,
+    db: AsyncSession = Depends(get_db),
+    current_patient: PatientProfile = Depends(get_current_patient),
+) -> ObservationResponse:
+    """Apply patient decision to an extracted candidate observation with full audit trail."""
+    obs = await DocumentIntelligenceService.review_candidate(
+        db=db,
+        document_id=document_id,
+        observation_id=observation_id,
+        patient=current_patient,
+        payload=payload,
+    )
+    return ObservationResponse.model_validate(obs)

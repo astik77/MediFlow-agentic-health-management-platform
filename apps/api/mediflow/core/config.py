@@ -59,6 +59,14 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 50
     allowed_extensions: list[str] = ["pdf", "jpg", "jpeg", "png", "webp", "tif", "tiff"]
 
+    # ---- Document Intelligence & OCR (Phase 4) ----
+    document_pipeline_version: str = "phase4-v1"
+    max_document_pages: int = 50
+    ocr_dpi: int = 200
+    ocr_min_text_chars_per_page: int = 40
+    document_chunk_max_chars: int = 1200
+    document_chunk_overlap_chars: int = 150
+
     # ---- AI Providers ----
     ollama_base_url: str = "http://localhost:11434"
     ollama_default_model: str = "qwen2.5:1.5b"

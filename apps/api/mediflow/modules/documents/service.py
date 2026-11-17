@@ -18,13 +18,13 @@ from pathlib import Path
 
 import structlog
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mediflow.core.dependencies import enforce_patient_ownership
-from mediflow.modules.documents.models import Document
+from mediflow.modules.documents.models import Document, DocumentChunk, DocumentPage
 from mediflow.modules.documents.schemas import DocumentType, DocumentUpdateRequest
-from mediflow.modules.health_records.models import HealthEvent
+from mediflow.modules.health_records.models import HealthEvent, HealthObservation
 from mediflow.modules.patients.models import PatientProfile
 
 logger = structlog.get_logger(__name__)
@@ -404,6 +404,18 @@ class DocumentService:
         if file_path.exists():
             file_path.unlink()
             logger.info("document_file_deleted", document_id=str(doc.id))
+
+        # SEC-016: Wipe derived pages & chunks and archive unconfirmed candidates
+        await db.execute(delete(DocumentPage).where(DocumentPage.document_id == doc.id))
+        await db.execute(delete(DocumentChunk).where(DocumentChunk.document_id == doc.id))
+        await db.execute(
+            update(HealthObservation)
+            .where(
+                HealthObservation.source_document_id == doc.id,
+                HealthObservation.review_status == "candidate",
+            )
+            .values(is_archived=True)
+        )
 
         doc.is_archived = True
         doc.upload_status = "archived"

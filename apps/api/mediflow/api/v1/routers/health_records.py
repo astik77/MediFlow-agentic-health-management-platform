@@ -355,3 +355,19 @@ async def get_observation_history(
     return await HealthRecordsService.get_entity_history(
         db, HealthObservation, "observation", observation_id, current_patient
     )
+
+
+# ---- PENDING EXTRACTED CANDIDATES (PHASE 4 REVIEW QUEUE) ----
+
+
+@router.get("/candidates", response_model=list[ObservationResponse])
+async def list_pending_candidates(
+    current_patient: PatientProfile = Depends(get_current_patient),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """Return all unreviewed candidate observations extracted from the patient's documents."""
+    from mediflow.modules.documents.intelligence_service import DocumentIntelligenceService
+
+    return await DocumentIntelligenceService.list_pending_candidates(
+        db=db, patient=current_patient
+    )

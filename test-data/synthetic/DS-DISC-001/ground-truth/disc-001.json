@@ -1,0 +1,24 @@
+{
+  "dataset_id": "DS-DISC-001",
+  "document_id": "disc-001",
+  "file_path": "C:\\Astik\\Projects\\MediFlow-agentic-health-management-platform\\test-data\\synthetic\\DS-DISC-001\\documents\\disc-001.pdf",
+  "mime_type": "application/pdf",
+  "document_type": "discharge_summary",
+  "expected_date": "2026-10-05",
+  "expected_text": "HOSPITAL DISCHARGE SUMMARY\nDate of Admission: 01/10/2026\nDate of Discharge: 05/10/2026\nFinal Diagnosis: Community-acquired pneumonia, resolved\nHospital Course: Admitted with fever and cough. Responded well to antibiotics.\nDISCHARGE INSTRUCTIONS\nCondition at Discharge: Stable, afebrile\nBlood Pressure: 122/78 mmHg\nHeart Rate: 76 bpm\nFollow-up Plan: Review in outpatient clinic after 7 days.",
+  "expected_observations": [
+    {
+      "test_name": "Blood Pressure",
+      "value": "122/78",
+      "unit": "mmHg",
+      "reference_range": null
+    },
+    {
+      "test_name": "Heart Rate",
+      "value": "76",
+      "unit": "bpm",
+      "reference_range": null
+    }
+  ],
+  "expect_injection": false
+}

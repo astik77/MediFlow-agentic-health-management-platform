@@ -135,10 +135,10 @@ Patient Portal will be live at: `http://localhost:3000`
   - Argon2id password hashing, HttpOnly server-managed sessions, session revocation, password recovery, patient onboarding & profile UI, backend ownership enforcement (SEC-001/002, SEC-004, SEC-005, SEC-006), 50/50 backend tests passing.
 - [x] **Phase 2: Medical History Foundation**
   - Conditions, allergies, symptoms, numeric/non-numeric observations, immutable correction revision trail (SEC-018), chronological medical timeline, My Health & Timeline UI, strict patient isolation verified.
-- [x] **Phase 3: Secure Document Management** *(Current)*
+- [x] **Phase 3: Secure Document Management**
   - Private patient-isolated document vault, MIME & magic-byte signature validation (SEC-007/008), UUID path-traversal prevention (SEC-009), streaming size enforcement (SEC-010), SHA-256 integrity hashing, secure file download, soft-archive with disk deletion (SEC-016), FK links from health records, Document Vault UI, 91/91 backend tests passing.
-- [ ] **Phase 4: Document Intelligence & OCR**
-  - PDF text extraction, OCR, table parsing, candidate fact extraction with reference ranges.
+- [x] **Phase 4: Document Intelligence & OCR** *(Current)*
+  - PyMuPDF digital text & rasterization, Pillow/OpenCV preprocessing, local RapidOCR ONNX engine, SEC-011 prompt-injection quarantine, deterministic medical classifier, clinical date/unit/observation parser, page-anchored RAG chunking, idempotent processing jobs (SEC-017), archive sync (SEC-016), two-pane Document Extraction & Candidate Review UI, synthetic evaluation baseline (CER 0.36%, WER 4.17%, 100% classification & extraction), 113/113 backend tests passing.
 - [ ] **Phase 5: Local AI Infrastructure**
   - Ollama integration, structured JSON generation, prompt versioning, hardware-adaptive inference.
 - [ ] **Phase 6: AI Health Assistant**

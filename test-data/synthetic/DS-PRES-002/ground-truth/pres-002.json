@@ -1,0 +1,11 @@
+{
+  "dataset_id": "DS-PRES-002",
+  "document_id": "pres-002",
+  "file_path": "C:\\Astik\\Projects\\MediFlow-agentic-health-management-platform\\test-data\\synthetic\\DS-PRES-002\\documents\\pres-002.pdf",
+  "mime_type": "application/pdf",
+  "document_type": "prescription",
+  "expected_date": "2026-10-15",
+  "expected_text": "PRESCRIPTION\nRx\nDated: 15 Oct 2026\nCap. Omeprazole 20 mg oral once daily before food for 14 days\nSyp. Ambroxol 5 ml thrice daily for 5 days",
+  "expected_observations": [],
+  "expect_injection": false
+}

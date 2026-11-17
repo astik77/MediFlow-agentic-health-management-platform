@@ -1,0 +1,11 @@
+{
+  "dataset_id": "DS-IMG-001",
+  "document_id": "img-001",
+  "file_path": "C:\\Astik\\Projects\\MediFlow-agentic-health-management-platform\\test-data\\synthetic\\DS-IMG-001\\documents\\img-001.pdf",
+  "mime_type": "application/pdf",
+  "document_type": "imaging",
+  "expected_date": "2026-10-22",
+  "expected_text": "RADIOLOGY REPORT - CHEST X-RAY PA VIEW\nExam Date: 2026-10-22\nTechnique: Standard posteroanterior chest radiograph.\nFindings: Lung fields are clear. Costophrenic angles are sharp. Cardiothoracic ratio is normal.\nImpression: No acute cardiopulmonary abnormality.",
+  "expected_observations": [],
+  "expect_injection": false
+}

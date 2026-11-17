@@ -21,7 +21,7 @@ import { AllergySection } from "@/features/health/AllergySection";
 import { SymptomSection } from "@/features/health/SymptomSection";
 import { ObservationSection } from "@/features/health/ObservationSection";
 import { RevisionHistoryModal } from "@/features/health/RevisionHistoryModal";
-import type { HealthOverview } from "@/types/health";
+import type { HealthObservation, HealthOverview } from "@/types/health";
 
 type TabId = "overview" | "symptoms" | "conditions" | "allergies" | "observations";
 
@@ -44,6 +44,12 @@ export default function MyHealthPage() {
   const { data: overview, isLoading: overviewLoading } = useQuery<HealthOverview>({
     queryKey: ["health", "overview"],
     queryFn: healthRecordsApi.getOverview,
+    enabled: authenticated,
+  });
+
+  const { data: pendingCandidates } = useQuery<HealthObservation[]>({
+    queryKey: ["health", "candidates"],
+    queryFn: healthRecordsApi.listPendingCandidates,
     enabled: authenticated,
   });
 
@@ -97,6 +103,37 @@ export default function MyHealthPage() {
             View Chronological Timeline
           </Link>
         </div>
+
+        {/* Pending Extracted Candidates Review Banner (Phase 4) */}
+        {pendingCandidates && pendingCandidates.length > 0 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5 text-sm text-[#946200]">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-semibold">
+                  {pendingCandidates.length} extracted observation
+                  {pendingCandidates.length === 1 ? "" : "s"} awaiting your
+                  confirmation
+                </p>
+                <p className="text-xs mt-0.5 text-[#946200]/90">
+                  Values extracted from uploaded documents remain marked as{" "}
+                  <span className="font-mono">candidate</span> until you review
+                  and confirm them.
+                </p>
+              </div>
+            </div>
+            <Link
+              href={
+                pendingCandidates[0]?.source_document_id
+                  ? `/documents/${pendingCandidates[0].source_document_id}`
+                  : "/documents"
+              }
+              className="inline-flex items-center justify-center px-3.5 py-2 rounded-lg text-xs font-semibold bg-[#946200] hover:bg-amber-800 text-white shrink-0 transition-colors"
+            >
+              Review Extracted Values
+            </Link>
+          </div>
+        )}
 
         {/* Subsections Tab Bar */}
         <div

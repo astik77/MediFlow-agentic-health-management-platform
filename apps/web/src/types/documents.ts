@@ -1,3 +1,5 @@
+import type { HealthObservation } from "@/types/health";
+
 export type DocumentType =
   | "lab_report"
   | "prescription"
@@ -60,4 +62,79 @@ export interface DocumentUpdatePayload {
   document_type?: DocumentType;
   document_date?: string | null;
   review_status?: ReviewStatus;
+}
+
+export type JobStatus = "queued" | "running" | "completed" | "failed";
+export type CandidateReviewAction = "confirm" | "edit_confirm" | "reject";
+
+export interface DocumentPage {
+  id: string;
+  document_id: string;
+  page_number: number;
+  extraction_method: string;
+  raw_text: string;
+  ocr_confidence: number | null;
+  char_count: number;
+  layout_metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface DocumentChunk {
+  id: string;
+  document_id: string;
+  chunk_index: number;
+  page_start: number;
+  page_end: number;
+  content: string;
+  token_estimate: number;
+  section_heading: string | null;
+  created_at: string;
+}
+
+export interface DocumentProcessingJob {
+  id: string;
+  document_id: string;
+  pipeline_version: string;
+  status: JobStatus;
+  attempt_count: number;
+  error_message: string | null;
+  metrics_json: Record<string, unknown> | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface DocumentClassification {
+  predicted_type: DocumentType;
+  confidence: number;
+  matched_signals: string[];
+}
+
+export interface SecurityFlag {
+  rule_id: string;
+  page_number: number;
+  matched_snippet: string;
+}
+
+export interface DocumentExtractionResponse {
+  document: DocumentItem;
+  latest_job: DocumentProcessingJob | null;
+  pages: DocumentPage[];
+  chunks_count: number;
+  chunks: DocumentChunk[];
+  observations: HealthObservation[];
+  classification: DocumentClassification | null;
+  security_flags: SecurityFlag[];
+}
+
+export interface CandidateReviewPayload {
+  action: CandidateReviewAction;
+  display_name?: string;
+  value_raw?: string;
+  unit_raw?: string | null;
+  reference_range_text?: string | null;
+  abnormality_flag?: "normal" | "low" | "high" | "critical" | "unknown" | null;
+  observed_at?: string | null;
+  notes?: string | null;
+  reason?: string | null;
 }

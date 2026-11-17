@@ -230,9 +230,15 @@ DS-SAFE-002
 ================================================================
 DATASET VERSION HISTORY
 ================================================================
-No datasets created yet as of Phase 0.
-Datasets will be versioned as:
-  DS-LAB-001-v1.0, DS-LAB-001-v1.1, etc.
+2026-11-18 (Phase 4):
+  - DS-LAB-001-v1.0  : COMPLETE (3 synthetic digital CBC/metabolic/lipid/thyroid PDFs + JSON GT)
+  - DS-LAB-002-v1.0  : COMPLETE (2 synthetic degraded scanned lab PNGs with noise/blur + JSON GT)
+  - DS-PRES-002-v1.0 : COMPLETE (2 synthetic printed prescription PDFs + JSON GT)
+  - DS-DISC-001-v1.0 : COMPLETE (1 multi-page synthetic discharge summary PDF + JSON GT)
+  - DS-IMG-001-v1.0  : COMPLETE (1 synthetic radiology chest X-ray report PDF + JSON GT)
+  - DS-MIX-002-v1.0  : COMPLETE (1 synthetic international SI units PDF + JSON GT)
+  - DS-SAFE-002-v1.0 : COMPLETE (2 synthetic SEC-011 prompt-injection PDFs + JSON GT)
+  Generator: apps/api/scripts/eval_phase4_documents.py (100% fictional, zero real patient data).
 
 Version changes require a new entry in METRICS_HISTORY.txt
 when re-evaluated.
