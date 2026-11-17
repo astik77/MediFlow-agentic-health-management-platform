@@ -18,10 +18,13 @@ import {
   AlertCircle,
   Check,
   X,
+  Bot,
+  BookOpen,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ApiError, documentsApi } from "@/lib/api";
+import { aiApi, ApiError, documentsApi } from "@/lib/api";
+import type { DocumentSummaryApiResponse } from "@/types/ai";
 import type { DocumentExtractionResponse } from "@/types/documents";
 import type { HealthObservation } from "@/types/health";
 
@@ -59,6 +62,10 @@ export default function DocumentExtractionPage() {
   const [editUnit, setEditUnit] = useState<string>("");
   const [editRange, setEditRange] = useState<string>("");
   const [editReason, setEditReason] = useState<string>("");
+  const [aiSummary, setAiSummary] = useState<DocumentSummaryApiResponse | null>(
+    null
+  );
+  const [aiError, setAiError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !authenticated) {
@@ -146,6 +153,21 @@ export default function DocumentExtractionPage() {
             ? err.detail
             : "Could not apply review decision.",
       });
+    },
+  });
+
+  const summarizeMutation = useMutation({
+    mutationFn: () => aiApi.summarizeDocument(documentId),
+    onSuccess: (res) => {
+      setAiSummary(res);
+      setAiError(null);
+    },
+    onError: (err: unknown) => {
+      setAiError(
+        err instanceof ApiError
+          ? err.detail
+          : "Unable to generate AI summary. Verify local Ollama is running."
+      );
     },
   });
 
@@ -608,6 +630,120 @@ export default function DocumentExtractionPage() {
             </div>
           </section>
         </div>
+
+        {/* Phase 5: Local AI Plain-Language Document Summary */}
+        {!doc.is_archived && pages.length > 0 && (
+          <section className="bg-white border border-[#E4E7EC] rounded-xl shadow-sm p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold flex items-center gap-2 text-[#172033]">
+                  <Bot className="w-5 h-5 text-[#2457A6]" />
+                  AI Plain-Language Summary (Local Ollama)
+                </h2>
+                <p className="text-xs text-[#667085] mt-0.5">
+                  Explains extracted clinical text in accessible terms using
+                  local-first inference. Strictly informational — never diagnoses
+                  or prescribes.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={summarizeMutation.isPending}
+                onClick={() => summarizeMutation.mutate()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold bg-[#2457A6] hover:bg-[#1D4688] text-white disabled:opacity-50 shrink-0 transition-colors"
+              >
+                {summarizeMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Generating Summary...
+                  </>
+                ) : (
+                  <>
+                    <BookOpen className="w-3.5 h-3.5" />
+                    {aiSummary ? "Regenerate Summary" : "Generate Plain-Language Summary"}
+                  </>
+                )}
+              </button>
+            </div>
+
+            {aiError && (
+              <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-[#946200] space-y-1">
+                <p className="font-semibold">Local AI Unavailable</p>
+                <p>{aiError}</p>
+                <p className="font-mono text-[11px] text-[#475467]">
+                  Tip: Start Ollama locally and run{" "}
+                  <code>ollama pull qwen2.5:1.5b</code>
+                </p>
+              </div>
+            )}
+
+            {aiSummary && (
+              <div className="space-y-4 border-t border-[#E4E7EC] pt-4">
+                <p className="text-sm leading-relaxed text-[#172033]">
+                  {aiSummary.summary.plain_language_summary}
+                </p>
+
+                {aiSummary.summary.key_findings.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#667085] mb-1.5">
+                      Key Points
+                    </h3>
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-[#172033]">
+                      {aiSummary.summary.key_findings.map((item, i) => (
+                        <li key={i}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {aiSummary.summary.medical_terms_explained.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#667085] mb-1.5">
+                      Medical Terms Explained
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                      {aiSummary.summary.medical_terms_explained.map((t, i) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded-lg bg-[#F7F9FC] border border-[#E4E7EC] text-xs"
+                        >
+                          <p className="font-semibold text-[#2457A6]">
+                            {t.term}
+                          </p>
+                          <p className="text-[#475467] mt-0.5">
+                            {t.explanation}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {aiSummary.summary.questions_for_doctor.length > 0 && (
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#667085] mb-1.5">
+                      Questions You Might Ask Your Doctor
+                    </h3>
+                    <ul className="list-disc pl-5 space-y-1 text-sm text-[#172033]">
+                      {aiSummary.summary.questions_for_doctor.map((q, i) => (
+                        <li key={i}>{q}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#E4E7EC] text-[11px] text-[#667085]">
+                  <span>{aiSummary.summary.informational_disclaimer}</span>
+                  <span className="font-mono">
+                    {aiSummary.provider} · {aiSummary.model} ·{" "}
+                    {aiSummary.prompt_id}@{aiSummary.prompt_version} ·{" "}
+                    {aiSummary.latency_ms}ms
+                  </span>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
       </main>
     </div>
   );

@@ -68,9 +68,13 @@ class Settings(BaseSettings):
     document_chunk_overlap_chars: int = 150
 
     # ---- AI Providers ----
+    ai_default_provider: Literal["ollama", "mock"] = "ollama"
+    ai_structured_max_retries: int = 1
+    ai_health_check_timeout_seconds: float = 0.5
     ollama_base_url: str = "http://localhost:11434"
     ollama_default_model: str = "qwen2.5:1.5b"
     ollama_embedding_model: str = "nomic-embed-text"
+    ollama_recommended_models: list[str] = ["qwen2.5:1.5b", "llama3.2:1b", "qwen2.5:3b"]
     ollama_timeout_seconds: int = 120
 
     gemini_enabled: bool = False

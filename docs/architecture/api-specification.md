@@ -264,3 +264,24 @@ Applies explicit patient governance over an extracted `candidate` observation (e
 
 ### `GET /api/v1/health-records/candidates`
 Returns all active unreviewed `review_status = "candidate"` observations across the authenticated patient's documents to power the patient review queue.
+
+---
+
+## 8. Local AI Infrastructure (`/api/v1/ai`)
+
+All endpoints require authentication (`401 Unauthorized`). Local Ollama (`qwen2.5:1.5b` + `nomic-embed-text`) is the default provider. External providers (`gemini`, `grok`) are disabled by default and hard-blocked on real patient data by the `SEC-014` Privacy Firewall (`403 Forbidden`). API keys and raw prompts/transcripts are never returned or logged (`SEC-015`).
+
+### `GET /api/v1/ai/status`
+Returns active provider configuration, recommended local models for host hardware, `SEC-014` privacy policy state, live reachability of local/external providers, and registered versioned prompt metadata (`prompt_id`, `version`, `sha256`).
+- **200 OK:** `AIStatusResponse`
+
+### `POST /api/v1/ai/documents/{document_id}/summarize`
+Generates a schema-validated, plain-language, strictly informational summary of an already-processed medical document (`doc_summary@1.0.0`).
+- **Query Parameters:** `provider` (optional override; external providers blocked for real patient data with `403`)
+- **Security & Validation:**
+  - Enforces document ownership (`403 Forbidden`)
+  - Wraps extracted document text in `<UNTRUSTED_DOCUMENT_DATA>` delimiters (`SEC-011`)
+  - Validates JSON output against `DocumentSummaryOutput` with automatic 1-retry repair (`AIR-001`)
+  - Cross-checks emitted `patient_id` against authenticated session (`SEC-013`, rejects mismatch with `422`)
+  - Persists anonymized telemetry row to `ai_invocation_logs`
+- **200 OK:** `DocumentSummaryApiResponse` (`409 Conflict` if unprocessed/archived, `503 Service Unavailable` if Ollama offline)

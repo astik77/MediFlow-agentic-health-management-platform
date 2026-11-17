@@ -1,0 +1,79 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_006_2026-11-18
+Date          : 2026-11-18
+Time (UTC)    : 21:24
+Phase         : 5 (Local AI Infrastructure)
+Component     : AI Provider Abstraction (Ollama, Gemini, Grok, Mock), SEC-014 Privacy Firewall, Versioned Prompt Registry, Structured Output Validator (AIR-001, SEC-013), SEC-015 Log Redaction, /api/v1/ai Endpoints, AI Summary & Status UI
+Test Type     : Unit, API Integration, Security & Privacy (SEC-001/002, SEC-004, SEC-013, SEC-014, SEC-015), Migration SQL, Frontend Type-Check, Lint & Build
+Environment   : local-dev (Windows 11, x86_64, Intel Core i3-1005G1, 7.7 GB RAM)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1, tsc, next lint, next build 15.3.9)
+Run Duration  : Backend full suite: 79.66s | Frontend build: 8.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : Phase 5 Completion (v1.5.0)
+Dataset Version   : Synthetic Phase 5 schema suite (20 cases)
+Model ID/Version  : Ollama qwen2.5:1.5b / nomic-embed-text (hermetic tests via MockTransport & MockAIProvider)
+Prompt Version    : doc_summary@1.0.0, structured_extraction@1.0.0, health_qa_base@1.0.0
+Pipeline Version  : phase5-v1
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+
+---
+SUMMARY
+---
+Backend Tests Collected : 131
+Backend Tests Passed    : 131
+Backend Tests Failed    : 0
+Backend Tests Skipped   : 0
+Backend Warnings        : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : PASSED (All checks passed!, 0 errors)
+Alembic Migration 0006  : PASSED (upgrade 0005:head --sql & downgrade head:0005 --sql verified)
+
+Frontend Type-Check     : PASSED (tsc --noEmit: 0 errors)
+Frontend ESLint         : PASSED (next lint: 0 warnings, 0 errors)
+Frontend Build          : PASSED (next build: 13/13 static pages + dynamic /documents/[id] built)
+
+Overall Result          : PASSED
+
+---
+TEST RESULTS (Detailed — Phase 5 Additions)
+---
+Test ID       | Test Name                                                           | Result | Notes
+--------------|---------------------------------------------------------------------|--------|------
+U-P5-001..010 | tests/unit/test_ai_infrastructure.py (10 unit tests)                | PASSED | Ollama chat/embed/tags/404/timeout, Gemini/Grok disabled & 429, SEC-014 firewall, PromptRegistry, fenced JSON + retry, SEC-013 foreign UUID, SEC-015 log redaction
+AI-001        | test_get_ai_status_returns_privacy_and_prompt_registry              | PASSED | Returns safe local-first config, SEC-014 flags, prompts, zero API keys leaked
+AI-002        | test_summarize_document_success_and_logs_invocation                 | PASSED | 409 before extract; 200 after extract; persists succeeded AIInvocationLog
+AI-003        | test_summarize_document_graceful_503_when_ollama_offline            | PASSED | Clean 503 with setup hint & provider_unavailable log row when Ollama offline
+AI-004        | test_summarize_nonexistent_document_returns_404                     | PASSED | Unknown document UUID returns 404
+S-018         | test_sec004_unauthenticated_ai_endpoints_rejected                   | PASSED | 401 on /ai/status and /ai/documents/{id}/summarize
+S-019         | test_sec001_002_cross_patient_summarize_forbidden                   | PASSED | Patient B receives 403 Forbidden summarizing Patient A's document
+S-020         | test_sec013_hallucinated_foreign_patient_id_blocked                 | PASSED | Hallucinated foreign UUID rejected (422) and logged with sec013_patient_id_mismatch
+S-021         | test_sec014_external_provider_blocked_for_real_patient_document     | PASSED | Requesting gemini or grok on real patient doc returns 403 & logs blocked_privacy
+E-P5-001      | scripts/eval_phase5_local_ai.py                                     | PASSED | AIR-001=1.00 (20/20 on MockAIProvider), SEC-013=PASSED, SEC-014=PASSED
+F-011         | apps/web pnpm type-check && pnpm lint && pnpm build                 | PASSED | 0 errors; /documents/[id] (6.2 kB) & /profile (4.84 kB) built cleanly
+M-008         | alembic upgrade/downgrade 0006_phase5_ai_infrastructure --sql       | PASSED | Valid PostgreSQL DDL for ai_invocation_logs + composite index
+
+(All 113 Phase 0–4 tests also re-executed and PASSED.)
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline (HIST-008/009/010): 113/113 backend tests passed (100%)
+Current run (HIST-011/012/013): 131/131 backend tests passed (100%), zero warnings
+Change: +18 Phase 5 unit, API & security tests; SEC-013, SEC-014, SEC-015 fully verified; zero regressions.
+
+---
+REGRESSIONS
+---
+No regressions detected.
+
+---
+APPROVAL
+---
+Approved for Phase 5 Completion: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-18

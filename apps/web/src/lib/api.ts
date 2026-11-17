@@ -1,4 +1,8 @@
 import type {
+  AIStatusResponse,
+  DocumentSummaryApiResponse,
+} from "@/types/ai";
+import type {
   AuthStatus,
   LoginPayload,
   OnboardingPayload,
@@ -451,5 +455,18 @@ export const documentsApi = {
         method: "POST",
         body: JSON.stringify(payload),
       }
+    ),
+};
+
+export const aiApi = {
+  getStatus: (): Promise<AIStatusResponse> =>
+    apiRequest<AIStatusResponse>("/api/v1/ai/status"),
+
+  summarizeDocument: (
+    documentId: string
+  ): Promise<DocumentSummaryApiResponse> =>
+    apiRequest<DocumentSummaryApiResponse>(
+      `/api/v1/ai/documents/${documentId}/summarize`,
+      { method: "POST" }
     ),
 };

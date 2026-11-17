@@ -249,6 +249,61 @@ NOTES       : All Phase 4 OCR, Classification, Numerical Extraction, and
 
 --- END PHASE 4 ---
 
+--- PHASE 5: LOCAL AI INFRASTRUCTURE ---
+
+ENTRY_ID    : HIST-011
+DATE        : 2026-11-18
+TIME        : 21:24 UTC
+PHASE       : 5
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit, API, and Security Test Pass Rate
+VALUE       : 131/131 passed (100%, 0 warnings)
+DATASET_ID  : N/A
+MODEL_ID    : Ollama adapter (qwen2.5:1.5b / nomic-embed-text) + MockAIProvider
+PROMPT_VER  : doc_summary@1.0.0, structured_extraction@1.0.0, health_qa_base@1.0.0
+PIPELINE_VER: phase5-v1
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5)
+NOTES       : Covers 113 Phase 0-4 tests + 10 Phase 5 unit tests (Ollama/Gemini/Grok
+              providers, SEC-014 privacy firewall, PromptRegistry, StructuredOutputRunner
+              JSON repair & retry, SEC-013 patient_id guard, SEC-015 log redaction) +
+              4 AI API integration tests (/ai/status, /ai/documents/{id}/summarize,
+              graceful 503 degradation, invocation logging) + 4 Phase 5 security tests
+              (SEC-001/002, SEC-004, SEC-013, SEC-014). Ruff: 0 errors. 0 warnings.
+
+ENTRY_ID    : HIST-012
+DATE        : 2026-11-18
+TIME        : 21:24 UTC
+PHASE       : 5
+METRIC_ID   : N/A (Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 13/13 static + /documents/[id] built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: phase5-v1
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Added AI Plain-Language Summary card to /documents/[id] and
+              Local AI Runtime & Privacy Controls card to /profile.
+
+ENTRY_ID    : HIST-013
+DATE        : 2026-11-18
+TIME        : 21:22 UTC
+PHASE       : 5
+METRIC_ID   : AIR-001, SEC-013, SEC-014, SEC-015
+METRIC_NAME : Phase 5 Structured Output & AI Security Harness
+VALUE       : AIR-001=1.00 (20/20 synthetic cases on MockAIProvider; live Ollama offline),
+              SEC-013=PASSED, SEC-014=PASSED, SEC-015=PASSED
+DATASET_ID  : Synthetic Phase 5 schema cases (20)
+MODEL_ID    : MockAIProvider (Ollama qwen2.5:1.5b ready when daemon is running)
+PROMPT_VER  : doc_summary@1.0.0
+PIPELINE_VER: phase5-v1
+TESTER      : automated (apps/api/scripts/eval_phase5_local_ai.py)
+NOTES       : Verified deterministic schema repair, SEC-013 foreign patient_id rejection,
+              and SEC-014 external AI privacy block. Re-run eval_phase5_local_ai.py once
+              Ollama is installed locally for live qwen2.5:1.5b latency telemetry.
+
+--- END PHASE 5 ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

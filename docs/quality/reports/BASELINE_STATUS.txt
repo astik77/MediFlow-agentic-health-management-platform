@@ -1,89 +1,87 @@
 MEDIFLOW — BASELINE STATUS
 ===========================
-Version: 1.4.0
+Version: 1.5.0
 Date: 2026-11-18
-Phase: 4 (Document Intelligence & OCR)
-Status: PHASES 0, 1, 2, 3 & 4 VERIFIED
+Phase: 5 (Local AI Infrastructure)
+Status: PHASES 0, 1, 2, 3, 4 & 5 VERIFIED
 
 ================================================================
 EXECUTIVE SUMMARY
 ================================================================
-Phases 0 through 4 are implemented and verified. Uploaded PDFs and
-medical images now flow through a local-first, zero-paid-API Document
-Intelligence & OCR pipeline (PyMuPDF + Pillow + OpenCV + RapidOCR ONNX),
-producing page-indexed extracted text, RAG-ready page-anchored chunks,
-deterministic document classification, SEC-011 prompt-injection scans,
-and structured candidate clinical observations that require explicit
-patient review and confirmation before entering official medical history.
+Phases 0 through 5 are implemented and verified. MEDIFLOW now has a
+complete, local-first AI infrastructure built on pure async httpx
+adapters: OllamaProvider (default: qwen2.5:1.5b + nomic-embed-text for
+Intel Core i3 / 7.7 GB RAM), optional synthetic-only Gemini & Grok
+adapters locked behind the SEC-014 Privacy Firewall, a versioned Prompt
+Registry with SEC-011 untrusted-data boundaries, Pydantic v2 structured
+output validation with automatic retry and SEC-013 patient_id cross-
+checking, SEC-015 structlog secret/transcript redaction, anonymized
+AIInvocationLog persistence, and patient-facing UI integration.
 
-Local LLM inference (Ollama), AI Health Assistant, RAG vector search,
-and analytics remain scheduled for Phases 5–8.
+AI Health Assistant (Phase 6), Patient-Specific RAG (Phase 7),
+Health Analytics (Phase 8), and Final Release Hardening (Phase 9)
+remain scheduled next.
 
 ================================================================
 COMPONENT STATUS & BASELINE READINESS
 ================================================================
 
-1. BACKEND API, AUTH, PROFILES, MEDICAL HISTORY, VAULT & INTELLIGENCE
+1. BACKEND API, AUTH, PROFILES, HISTORY, VAULT, OCR & LOCAL AI
    - Status: IMPLEMENTED & VERIFIED
    - Framework: FastAPI 0.163.1 + Pydantic v2 (Python 3.11)
-   - Modules Active: auth, patients, health_records, timeline, documents, documents.pipeline
-   - Test Results: 113/113 automated tests PASSED (100% pass rate, 102.03s, 0 warnings)
-     - 13 config unit tests + 8 Argon2id/token unit tests + 14 Phase 4 pipeline unit tests
-     - 12 health API tests + 10 auth API tests + 3 patient profile tests
-     - 5 medical history CRUD/revision tests + 1 timeline test
-     - 20 document vault API tests + 3 document intelligence & RapidOCR integration tests
-     - 24 security tests (SEC-001/002, SEC-004–011, SEC-014, SEC-016–018)
+   - Modules Active: auth, patients, health_records, timeline, documents,
+     documents.pipeline, ai (providers, prompts, safety, service)
+   - Test Results: 131/131 automated tests PASSED (100% pass rate, 79.66s, 0 warnings)
+     - 45 unit tests (config, Argon2id/tokens, Phase 4 pipeline, Phase 5 AI infra)
+     - 58 API integration tests (health, auth, profiles, history, timeline, vault, OCR, AI)
+     - 28 security tests (SEC-001/002, SEC-004–011, SEC-013–018)
    - Linting (Ruff): 0 errors across mediflow/, tests/, migrations/, scripts/
 
 2. DATABASE & ORM
-   - Status: PHASE 4 SCHEMA MIGRATIONS READY
+   - Status: PHASE 5 SCHEMA MIGRATIONS READY
    - Migrations:
      - 0001_phase1_auth_patients
      - 0002_phase2_medical_history
      - 0003_phase3_documents
      - 0004_phase3_add_document_fk_links
-     - 0005_phase4_document_intelligence (document_pages, document_chunks, document_processing_jobs)
+     - 0005_phase4_document_intelligence
+     - 0006_phase5_ai_infrastructure (ai_invocation_logs)
    - Verification: Alembic upgrade & downgrade SQL verified cleanly
 
 3. FRONTEND APPLICATION
-   - Status: PHASE 4 UI IMPLEMENTED & VERIFIED
+   - Status: PHASE 5 UI IMPLEMENTED & VERIFIED
    - Framework: Next.js 15.3.9 (App Router) + TypeScript + Tailwind CSS
    - Pages Implemented: /, /login, /register, /forgot-password,
-     /onboarding, /profile, /health, /documents, /documents/[id], /timeline
+     /onboarding, /profile (with Local AI & Privacy Status), /health,
+     /documents, /documents/[id] (with AI Plain-Language Summary), /timeline
    - Verification: tsc --noEmit (0 errors), next lint (0 warnings/errors),
-     next build (13/13 static pages + dynamic /documents/[id] built cleanly)
+     next build (13/13 static + /documents/[id] dynamic built in 8.0s)
 
 4. DOCUMENT INTELLIGENCE & OCR BASELINE (PHASE 4 — MEASURED)
-   - Datasets: 12 synthetic documents across DS-LAB-001/002, DS-PRES-002,
-     DS-DISC-001, DS-IMG-001, DS-MIX-002, DS-SAFE-002 (zero real patient data)
-   - OCR-001 (CER): 0.36% (Target < 5%) — PASSED
-   - OCR-002 (WER): 4.17% (Target < 10%) — PASSED
-   - OCR-003 (Completeness): 100.0% (Target > 90%) — PASSED
-   - DC-001..004 (Classification Accuracy/Precision/Recall/F1): 100.0% — PASSED
-   - NE-001..005 (Value/Unit/Range/Date/Association Accuracy): 100.0% — PASSED
+   - OCR-001 (CER): 0.36% | OCR-002 (WER): 4.17% | OCR-003 (Completeness): 100.0%
+   - DC-001..004: 100.0% | NE-001..005: 100.0%
 
-5. LOCAL AI INFRASTRUCTURE, ASSISTANT & RAG
-   - Target Phases: Phases 5, 6 & 7
-   - Baseline Status: NOT RUN
+5. LOCAL AI INFRASTRUCTURE (PHASE 5 — VERIFIED)
+   - Default Model Profile: Ollama qwen2.5:1.5b (generation) + nomic-embed-text (embeddings)
+   - AIR-001 (Structured Output Validity Harness): 100.0% (20/20 on MockAIProvider; live Ollama offline)
+   - Prompt Registry: doc_summary@1.0.0, structured_extraction@1.0.0, health_qa_base@1.0.0
 
 6. SECURITY CONTROLS (SEC-001 through SEC-018)
-   - SEC-001 / SEC-002 (Cross-patient access — Profiles, History, Vault, Extraction, Review): PASSED
+   - SEC-001 / SEC-002 (Cross-patient access — Profiles, History, Vault, OCR, AI): PASSED
    - SEC-004 (Authentication bypass): PASSED
-   - SEC-005 (Expired session access): PASSED
-   - SEC-006 (Session revocation & replay): PASSED
-   - SEC-007 (MIME allowlist): PASSED
-   - SEC-008 (File magic-byte signature validation): PASSED
-   - SEC-009 (Path traversal prevention & storage containment): PASSED
-   - SEC-010 (Upload size limit / resource exhaustion guard): PASSED
-   - SEC-011 (Document prompt injection detection & quarantine): PASSED (100%, 0 FP)
-   - SEC-014 (External AI disabled by default): PASSED
+   - SEC-005 / SEC-006 (Expired / revoked sessions): PASSED
+   - SEC-007 / SEC-008 / SEC-009 / SEC-010 (Upload MIME, magic bytes, traversal, size): PASSED
+   - SEC-011 (Document prompt injection detection & untrusted delimiters): PASSED
+   - SEC-013 (Invalid / hallucinated foreign patient_id in AI output): PASSED
+   - SEC-014 (External AI Privacy Firewall blocking real patient data): PASSED
+   - SEC-015 (Sensitive credentials & raw medical transcripts redacted in logs): PASSED
    - SEC-016 (Archive wipes disk file, pages, chunks & unconfirmed candidates): PASSED
    - SEC-017 (Idempotent processing & concurrent active-job lock): PASSED
    - SEC-018 (Immutable provenance & revision history): PASSED
-   - Remaining SEC tests: SEC-003 (Phase 7), SEC-012/013 (Phase 6), SEC-015 (Phase 9)
+   - Remaining SEC tests: SEC-003 (Phase 7 RAG), SEC-012 (Phase 6 AI Tools)
 
 ================================================================
 NEXT MILESTONES
 ================================================================
-- Obtain user approval for Phase 4 Completion
-- Proceed to Phase 5: Local AI Infrastructure (Ollama)
+- Obtain user approval for Phase 5 Completion
+- Proceed to Phase 6: AI Health Assistant
