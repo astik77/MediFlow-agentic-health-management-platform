@@ -1,0 +1,202 @@
+{
+  "dataset_id": "DS-RAG-001",
+  "version": "1.0",
+  "documents": [
+    {
+      "key": "doc_cbc",
+      "title": "October Complete Blood Count & Renal Panel",
+      "type": "lab_report",
+      "date": "2026-10-12",
+      "page": 1,
+      "heading": "COMPLETE BLOOD COUNT",
+      "content": "Complete Blood Count & Renal Function Panel. Hemoglobin: 11.4 g/dL (Ref 12.0 - 16.0) [LOW]. WBC Count: 7.4 10^3/uL. Platelets: 245 10^3/uL. Serum Creatinine: 0.9 mg/dL (Ref 0.6 - 1.2) normal kidney function."
+    },
+    {
+      "key": "doc_lipid",
+      "title": "November Metabolic & Lipid Profile",
+      "type": "lab_report",
+      "date": "2026-11-05",
+      "page": 1,
+      "heading": "METABOLIC & LIPID PROFILE",
+      "content": "Fasting Blood Glucose: 118 mg/dL (Ref 70 - 100) [HIGH]. HbA1c: 6.8 % (Ref 4.0 - 5.6) [HIGH]. Total Cholesterol: 228 mg/dL. LDL Cholesterol: 148 mg/dL. HDL Cholesterol: 46 mg/dL. Triglycerides: 162 mg/dL."
+    },
+    {
+      "key": "doc_thyroid",
+      "title": "September Thyroid & Liver Function Panel",
+      "type": "lab_report",
+      "date": "2026-09-18",
+      "page": 1,
+      "heading": "THYROID & HEPATIC PANEL",
+      "content": "TSH: 4.8 mIU/L (Ref 0.4 - 4.0) [HIGH]. ALT (SGPT): 32 U/L (Ref 7 - 56). AST (SGOT): 28 U/L (Ref 10 - 40). Total Bilirubin: 0.8 mg/dL (Ref 0.1 - 1.2)."
+    },
+    {
+      "key": "doc_rx",
+      "title": "Outpatient Clinic Prescription",
+      "type": "prescription",
+      "date": "2026-11-03",
+      "page": 1,
+      "heading": "PRESCRIPTION",
+      "content": "Rx. Tab. Metformin 500 mg oral twice daily after food for 30 days. Tab. Atorvastatin 10 mg once daily at bedtime for lipid control. Cap. Omeprazole 20 mg once daily before breakfast for acid reflux."
+    },
+    {
+      "key": "doc_discharge",
+      "title": "Hospital Discharge Summary - Pneumonia",
+      "type": "discharge_summary",
+      "date": "2026-10-05",
+      "page": 2,
+      "heading": "HOSPITAL COURSE & DISCHARGE",
+      "content": "Final Diagnosis: Community-acquired pneumonia, resolved. Admitted with fever and cough; responded well to inpatient antibiotics. Condition at Discharge: Stable, afebrile. Blood Pressure: 122/78 mmHg. Follow-up Plan: Outpatient pulmonary review after 7 days."
+    },
+    {
+      "key": "doc_xray",
+      "title": "Chest X-Ray PA View Radiology Report",
+      "type": "imaging",
+      "date": "2026-10-22",
+      "page": 1,
+      "heading": "RADIOLOGY IMPRESSION",
+      "content": "Chest X-Ray PA View. Technique: Posteroanterior chest radiograph. Findings: Lung fields are clear. Costophrenic angles are sharp. Cardiothoracic ratio is normal. Impression: No acute cardiopulmonary abnormality."
+    }
+  ],
+  "queries": [
+    {
+      "id": "Q01",
+      "query": "What was my hemoglobin level?",
+      "relevant": [
+        "doc_cbc"
+      ]
+    },
+    {
+      "id": "Q02",
+      "query": "Check my kidney function and creatinine",
+      "relevant": [
+        "doc_cbc"
+      ]
+    },
+    {
+      "id": "Q03",
+      "query": "What is my platelet count and WBC?",
+      "relevant": [
+        "doc_cbc"
+      ]
+    },
+    {
+      "id": "Q04",
+      "query": "What was my fasting blood sugar?",
+      "relevant": [
+        "doc_lipid"
+      ]
+    },
+    {
+      "id": "Q05",
+      "query": "Show my latest HbA1c percentage",
+      "relevant": [
+        "doc_lipid"
+      ]
+    },
+    {
+      "id": "Q06",
+      "query": "What are my LDL and HDL cholesterol values?",
+      "relevant": [
+        "doc_lipid"
+      ]
+    },
+    {
+      "id": "Q07",
+      "query": "Check my triglycerides lipid profile",
+      "relevant": [
+        "doc_lipid"
+      ]
+    },
+    {
+      "id": "Q08",
+      "query": "What was my TSH thyroid test result?",
+      "relevant": [
+        "doc_thyroid"
+      ]
+    },
+    {
+      "id": "Q09",
+      "query": "Check my liver enzymes ALT AST bilirubin",
+      "relevant": [
+        "doc_thyroid"
+      ]
+    },
+    {
+      "id": "Q10",
+      "query": "What dose of Metformin was prescribed?",
+      "relevant": [
+        "doc_rx"
+      ]
+    },
+    {
+      "id": "Q11",
+      "query": "Which medicine was given for acid reflux?",
+      "relevant": [
+        "doc_rx"
+      ]
+    },
+    {
+      "id": "Q12",
+      "query": "Atorvastatin prescription instructions",
+      "relevant": [
+        "doc_rx"
+      ]
+    },
+    {
+      "id": "Q13",
+      "query": "Why was I admitted to the hospital?",
+      "relevant": [
+        "doc_discharge"
+      ]
+    },
+    {
+      "id": "Q14",
+      "query": "What was my discharge blood pressure?",
+      "relevant": [
+        "doc_discharge"
+      ]
+    },
+    {
+      "id": "Q15",
+      "query": "Pneumonia follow-up plan after discharge",
+      "relevant": [
+        "doc_discharge"
+      ]
+    },
+    {
+      "id": "Q16",
+      "query": "What did my chest x-ray impression show?",
+      "relevant": [
+        "doc_xray"
+      ]
+    },
+    {
+      "id": "Q17",
+      "query": "Are my lung fields clear on radiology?",
+      "relevant": [
+        "doc_xray"
+      ]
+    },
+    {
+      "id": "Q18",
+      "query": "Cardiothoracic ratio radiograph findings",
+      "relevant": [
+        "doc_xray"
+      ]
+    },
+    {
+      "id": "Q19",
+      "query": "Any signs of low hemoglobin or anemia?",
+      "relevant": [
+        "doc_cbc"
+      ]
+    },
+    {
+      "id": "Q20",
+      "query": "Diabetes blood sugar and HbA1c report",
+      "relevant": [
+        "doc_lipid"
+      ]
+    }
+  ]
+}

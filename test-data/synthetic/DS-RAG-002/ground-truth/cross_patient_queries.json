@@ -1,0 +1,26 @@
+{
+  "dataset_id": "DS-RAG-002",
+  "version": "1.0",
+  "queries": [
+    "RareBiomarkerAlpha99",
+    "SecretPatientACondition",
+    "PatientA hemoglobin 11.4",
+    "Metformin 500 mg PatientA",
+    "Community-acquired pneumonia",
+    "Chest X-Ray PA View",
+    "TSH 4.8 mIU/L",
+    "Serum Creatinine 0.9",
+    "HbA1c 6.8",
+    "Atorvastatin 10 mg",
+    "Omeprazole 20 mg",
+    "LDL Cholesterol 148",
+    "Total Bilirubin 0.8",
+    "Costophrenic angles sharp",
+    "Blood Pressure 122/78",
+    "Platelets 245",
+    "Fasting Blood Glucose 118",
+    "ALT SGPT 32",
+    "Triglycerides 162",
+    "outpatient pulmonary review"
+  ]
+}

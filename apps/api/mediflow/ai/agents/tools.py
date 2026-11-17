@@ -212,6 +212,43 @@ async def _tool_recent_documents(
     }
 
 
+async def _tool_search_patient_documents(
+    db: AsyncSession, patient: PatientProfile, args: dict[str, Any]
+) -> dict[str, Any]:
+    """Read-only patient-scoped hybrid RAG search across uploaded documents (SEC-003)."""
+    from mediflow.ai.rag.service import RagService
+
+    query = str(args.get("query", "")).strip()
+    top_k = min(max(int(args.get("top_k", 3)), 1), 8)
+    if not query:
+        return {"hits": [], "embedding_model": None}
+
+    hits, model_name = await RagService.search(
+        db=db,
+        patient=patient,
+        query=query,
+        top_k=top_k,
+    )
+    return {
+        "embedding_model": model_name,
+        "hits": [
+            {
+                "chunk_id": str(h.chunk_id),
+                "document_id": str(h.document_id),
+                "document_title": h.document_title,
+                "document_type": h.document_type,
+                "document_date": h.document_date,
+                "page_start": h.page_start,
+                "page_end": h.page_end,
+                "snippet": h.snippet,
+                "score": h.score,
+                "match_type": h.match_type,
+            }
+            for h in hits
+        ],
+    }
+
+
 async def _tool_propose_symptom_record(
     _db: AsyncSession, patient: PatientProfile, args: dict[str, Any]
 ) -> dict[str, Any]:
@@ -277,6 +314,12 @@ class AgentToolRegistry:
             mode="read_only",
             description="List authenticated patient's active uploaded documents.",
             handler=_tool_recent_documents,
+        ),
+        "search_patient_documents": ToolDefinition(
+            name="search_patient_documents",
+            mode="read_only",
+            description="Hybrid semantic + keyword RAG search over patient's active documents.",
+            handler=_tool_search_patient_documents,
         ),
         "propose_symptom_record": ToolDefinition(
             name="propose_symptom_record",

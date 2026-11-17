@@ -312,3 +312,18 @@ Posts a patient message and generates a safety-checked, record-grounded AI Healt
 
 ### `POST /api/v1/conversations/{conversation_id}/messages/{message_id}/proposal`
 Applies the patient's explicit decision (`"accept"` or `"dismiss"`) to an AI-proposed symptom draft. Accepting creates a `PatientSymptom` (`source_type = "ai_proposed"`, `review_status = "confirmed"`) with an immutable `RecordRevision` and `HealthEvent` on the Medical Timeline. Returns `409 Conflict` if already resolved.
+
+---
+
+## 10. Patient-Specific Hybrid RAG (`/api/v1/ai/rag`)
+
+Strictly scoped to the authenticated patient (`WHERE patient_id = :session_patient_id AND document.is_archived = false`) plus a post-query defense-in-depth ownership assertion (`SEC-003`, `RAG-008 = 0.00`). Archiving a document atomically deletes its `document_embeddings` rows (`SEC-016`).
+
+### `POST /api/v1/ai/rag/search`
+Executes hybrid Okapi BM25 lexical + cosine dense vector retrieval merged via Reciprocal Rank Fusion (RRF) across all active processed chunks of the authenticated patient.
+- **Request Body:** `{ "query": "fasting blood sugar", "top_k": 5, "document_type": null }`
+- **200 OK:** `RagSearchResponse` containing ranked hits with `document_id`, `document_title`, `page_start`, `page_end`, `snippet`, `score`, `lexical_score`, `vector_score`, and `match_type` (`hybrid` | `semantic` | `lexical`).
+
+### `POST /api/v1/ai/rag/reindex`
+Re-embeds all active processed `document_chunks` for the authenticated patient using Ollama `nomic-embed-text` (when online) or deterministic local `local-hash-256-v1` fallback.
+- **200 OK:** `RagReindexResponse` (`documents_indexed`, `chunks_indexed`, `embedding_model`, `dimensions`).

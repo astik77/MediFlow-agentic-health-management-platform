@@ -246,6 +246,13 @@ DATASET VERSION HISTORY
                        prescriptions, diagnosis demands, negated red flags & benign queries)
   Generator: apps/api/scripts/eval_phase6_safety.py (100% synthetic, zero real patient data).
 
+2026-11-18 (Phase 7):
+  - DS-RAG-001-v1.0  : COMPLETE (6 synthetic multi-domain medical documents + 20 clinical
+                       retrieval queries with ground-truth relevant document annotations)
+  - DS-RAG-002-v1.0  : COMPLETE (20 adversarial cross-patient isolation queries verifying
+                       RAG-008 = 0.00 / SEC-003 zero leakage)
+  Generator: apps/api/scripts/eval_phase7_rag.py (100% synthetic, zero real patient data).
+
 Version changes require a new entry in METRICS_HISTORY.txt
 when re-evaluated.
 

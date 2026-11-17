@@ -23,7 +23,8 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/features/auth/AuthContext";
-import { ApiError, documentsApi } from "@/lib/api";
+import { aiApi, ApiError, documentsApi } from "@/lib/api";
+import type { RagSearchResponse } from "@/types/ai";
 import type {
   DocumentItem,
   DocumentListResponse,
@@ -110,6 +111,11 @@ export default function DocumentsPage() {
   // Inline archive confirmation state
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
 
+  // Phase 7: Smart Hybrid RAG search state
+  const [ragQuery, setRagQuery] = useState<string>("");
+  const [ragResult, setRagResult] = useState<RagSearchResponse | null>(null);
+  const [ragError, setRagError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!authLoading && !authenticated) {
       router.replace("/login");
@@ -195,10 +201,35 @@ export default function DocumentsPage() {
     mutationFn: documentsApi.archive,
     onSuccess: () => {
       setConfirmArchiveId(null);
+      setRagResult(null);
       queryClient.invalidateQueries({ queryKey: ["documents"] });
       queryClient.invalidateQueries({ queryKey: ["timeline"] });
     },
   });
+
+  const ragSearchMutation = useMutation({
+    mutationFn: (query: string) =>
+      aiApi.searchDocuments({
+        query,
+        top_k: 5,
+        document_type: filterType || null,
+      }),
+    onSuccess: (res) => {
+      setRagResult(res);
+      setRagError(null);
+    },
+    onError: (err: unknown) => {
+      setRagError(
+        err instanceof ApiError ? err.detail : "Semantic document search failed."
+      );
+    },
+  });
+
+  const handleRagSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (ragQuery.trim().length < 2) return;
+    ragSearchMutation.mutate(ragQuery.trim());
+  };
 
   const handleFileSelected = (file: File | null) => {
     setUploadFeedback(null);
@@ -303,6 +334,106 @@ export default function DocumentsPage() {
             <ShieldCheck className="w-4 h-4" />
             Private patient-isolated storage · SHA-256 verified
           </div>
+        </section>
+
+        {/* Phase 7: Smart Hybrid Semantic Search (Patient-Scoped RAG) */}
+        <section className="bg-white border border-blue-200 rounded-xl p-5 shadow-sm space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-bold text-[#172033] flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#2457A6]" />
+                Smart Health Search (Patient-Scoped Hybrid RAG)
+              </h2>
+              <p className="text-xs text-[#667085] mt-0.5">
+                Search inside the text of your processed medical documents using
+                hybrid keyword + semantic matching with exact page citations.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleRagSearch} className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              value={ragQuery}
+              onChange={(e) => setRagQuery(e.target.value)}
+              placeholder='Ask across all your reports (e.g., "fasting blood sugar", "chest x-ray impression", "metformin")'
+              className="flex-1 px-3.5 py-2 text-sm border border-[#D0D5DD] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2457A6]/30 focus:border-[#2457A6]"
+            />
+            <button
+              type="submit"
+              disabled={ragQuery.trim().length < 2 || ragSearchMutation.isPending}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold bg-[#2457A6] hover:bg-[#1D4688] text-white disabled:opacity-50 transition-colors"
+            >
+              {ragSearchMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Search className="w-4 h-4" />
+              )}
+              Search Inside Reports
+            </button>
+          </form>
+
+          {ragError && (
+            <p className="text-xs text-[#B42318]">{ragError}</p>
+          )}
+
+          {ragResult && (
+            <div className="pt-2 border-t border-[#E4E7EC] space-y-2.5">
+              <div className="flex items-center justify-between text-xs text-[#667085]">
+                <span>
+                  Found <strong>{ragResult.total_hits}</strong> matching passage
+                  {ragResult.total_hits === 1 ? "" : "s"} (index:{" "}
+                  <span className="font-mono">{ragResult.embedding_model}</span>)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setRagResult(null)}
+                  className="text-[#2457A6] hover:underline"
+                >
+                  Clear results
+                </button>
+              </div>
+              {ragResult.hits.length === 0 ? (
+                <p className="text-xs text-[#667085]">
+                  No matching passages found in your processed documents. Make sure
+                  your documents have been analyzed via &ldquo;Inspect &amp;
+                  Extract&rdquo;.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {ragResult.hits.map((hit) => (
+                    <div
+                      key={hit.chunk_id}
+                      className="p-3.5 rounded-lg bg-[#F7F9FC] border border-[#E4E7EC] space-y-1.5"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <Link
+                          href={`/documents/${hit.document_id}`}
+                          className="text-sm font-semibold text-[#2457A6] hover:underline"
+                        >
+                          {hit.document_title}
+                        </Link>
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                          <span className="px-2 py-0.5 rounded-full bg-white border border-[#D0D5DD] text-[#172033] font-medium">
+                            Page {hit.page_start}
+                            {hit.page_end > hit.page_start
+                              ? `-${hit.page_end}`
+                              : ""}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-[#157A5B] border border-emerald-200 capitalize">
+                            {hit.match_type}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#475467] leading-relaxed">
+                        {hit.snippet}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Upload Panel */}

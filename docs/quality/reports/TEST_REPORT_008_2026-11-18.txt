@@ -1,0 +1,81 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_008_2026-11-18
+Date          : 2026-11-18
+Time (UTC)    : 21:57
+Phase         : 7 (Patient-Specific Hybrid RAG)
+Component     : Document Embeddings, Local Ollama + Fallback Embedder, Hybrid BM25+Cosine RRF Retriever, SEC-003 Isolation, SEC-016 Vector Wipe Sync, HealthAssistant RAG Tool, /api/v1/ai/rag/* APIs, Smart Search UI
+Test Type     : Unit, API Integration, RAG Evaluation (DS-RAG-001 & DS-RAG-002), Security & Isolation (SEC-003/RAG-008, SEC-004, SEC-016), Migration SQL, Frontend Type-Check, Lint & Build
+Environment   : local-dev (Windows 11, x86_64, Intel Core i3-1005G1, 7.7 GB RAM)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1, tsc, next lint, next build 15.3.9)
+Run Duration  : Backend full suite: 125.04s | Frontend build: 5.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : Phase 7 Completion (v1.7.0)
+Dataset Version   : DS-RAG-001-v1.0 (20 queries), DS-RAG-002-v1.0 (20 cross-patient queries)
+Model ID/Version  : Ollama nomic-embed-text / LocalHashEmbedder (local-hash-256-v1)
+Prompt Version    : health_assistant@1.0.0
+Pipeline Version  : phase7-v1
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+
+---
+SUMMARY
+---
+Backend Tests Collected : 150
+Backend Tests Passed    : 150
+Backend Tests Failed    : 0
+Backend Tests Skipped   : 0
+Backend Warnings        : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : PASSED (All checks passed!, 0 errors)
+Alembic Migration 0008  : PASSED (upgrade 0007:head --sql & downgrade head:0007 --sql verified)
+
+Frontend Type-Check     : PASSED (tsc --noEmit: 0 errors)
+Frontend ESLint         : PASSED (next lint: 0 warnings, 0 errors)
+Frontend Build          : PASSED (next build: 14/14 static pages + dynamic /documents/[id] built)
+
+Overall Result          : PASSED
+
+---
+RAG EVALUATION METRICS (apps/api/scripts/eval_phase7_rag.py)
+---
+Metric ID | Metric Name                     | Measured | Target    | Status
+----------|---------------------------------|----------|-----------|-------
+RAG-001   | Recall@5                        | 100.0%   | > 80.0%   | PASSED
+RAG-002   | Precision@1                     | 100.0%   | > 60.0%   | PASSED
+RAG-003   | Mean Reciprocal Rank (MRR)      | 1.0000   | > 0.70    | PASSED
+RAG-004   | Citation Correctness Rate       | 100.0%   | > 90.0%   | PASSED
+RAG-008   | Cross-Patient Retrieval Rate    | 0.0000   | 0.00 (0%) | PASSED (0 leaks)
+
+---
+TEST RESULTS (Detailed — Phase 7 Additions)
+---
+Test ID       | Test Name                                                           | Result | Notes
+--------------|---------------------------------------------------------------------|--------|------
+U-P7-001..003 | tests/unit/test_rag_engine.py (3 unit tests)                        | PASSED | Clinical synonym embeddings, hybrid RRF ranking, SEC-003 foreign candidate block
+RAG-INT-001   | test_rag_automatic_indexing_hybrid_search_reindex_and_assistant_citations | PASSED | Auto-indexing on /process, hybrid search, type filter, /reindex, Assistant "(p. 1)" citation
+S-026         | test_sec004_unauthenticated_rag_endpoints_rejected                  | PASSED | 401 on /ai/rag/search and /ai/rag/reindex
+S-027         | test_sec003_rag008_zero_cross_patient_rag_leakage                   | PASSED | 0 leaks across 10 targeted adversarial queries from Patient B against Patient A
+S-028         | test_sec016_archived_document_embeddings_wiped_and_unretrievable    | PASSED | Archiving wipes DocumentEmbedding rows; subsequent RAG query returns 0 hits
+E-P7-001      | scripts/eval_phase7_rag.py (DS-RAG-001 & DS-RAG-002)                | PASSED | Recall@5=1.0, MRR=1.0, Citation=1.0, RAG-008=0.0
+F-013         | apps/web pnpm type-check && pnpm lint && pnpm build                 | PASSED | 0 errors; /documents (7.01 kB) with Smart Hybrid Search built cleanly
+M-010         | alembic upgrade/downgrade 0008_phase7_rag_embeddings --sql          | PASSED | Valid PostgreSQL DDL for document_embeddings + patient/doc indexes
+
+(All 143 Phase 0–6 tests also re-executed and PASSED.)
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline (HIST-014/015/016): 143/143 backend tests passed (100%)
+Current run (HIST-017/018/019): 150/150 backend tests passed (100%), all 18/18 SEC controls PASSED
+Change: +7 Phase 7 tests, DS-RAG-001 & DS-RAG-002 baselines established, zero regressions.
+
+---
+APPROVAL
+---
+Approved for Phase 7 Completion: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-18

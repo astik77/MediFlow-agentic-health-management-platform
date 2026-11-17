@@ -358,6 +358,59 @@ NOTES       : Zero-tolerance AIR-004 target (1.00) achieved with 0 false positiv
 
 --- END PHASE 6 ---
 
+--- PHASE 7: PATIENT-SPECIFIC HYBRID RAG ---
+
+ENTRY_ID    : HIST-017
+DATE        : 2026-11-18
+TIME        : 21:57 UTC
+PHASE       : 7
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit, API, and Security Test Pass Rate
+VALUE       : 150/150 passed (100%, 0 warnings)
+DATASET_ID  : N/A
+MODEL_ID    : Ollama nomic-embed-text / LocalHashEmbedder (local-hash-256-v1)
+PROMPT_VER  : health_assistant@1.0.0
+PIPELINE_VER: phase7-v1
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5)
+NOTES       : Covers 143 Phase 0-6 tests + 3 RAG unit tests (synonym embedding,
+              hybrid BM25+cosine RRF ranking, SEC-003 defense-in-depth block) +
+              1 full RAG + Assistant page-citation integration test + 3 Phase 7
+              security tests (SEC-003/RAG-008 zero cross-patient leakage across
+              10 targeted queries, SEC-004 auth, SEC-016 vector wipe on archive).
+
+ENTRY_ID    : HIST-018
+DATE        : 2026-11-18
+TIME        : 21:56 UTC
+PHASE       : 7
+METRIC_ID   : N/A (Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 14/14 static + /documents/[id] built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: phase7-v1
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Added Smart Health Search (Patient-Scoped Hybrid RAG) panel to
+              /documents with page-level citation cards and match-type badges.
+
+ENTRY_ID    : HIST-019
+DATE        : 2026-11-18
+TIME        : 21:54 UTC
+PHASE       : 7
+METRIC_ID   : RAG-001, RAG-002, RAG-003, RAG-004, RAG-008, SEC-003
+METRIC_NAME : Phase 7 Patient-Specific Hybrid RAG Evaluation Baseline
+VALUE       : RAG-001 Recall@5=1.00, RAG-002 Precision@1=1.00, RAG-003 MRR=1.00,
+              RAG-004 CitationCorrectness=1.00, RAG-008 CrossPatientRate=0.00 (0 leaks)
+DATASET_ID  : DS-RAG-001-v1.0 (20 queries), DS-RAG-002-v1.0 (20 cross-patient queries)
+MODEL_ID    : local-hash-256-v1 (deterministic offline embedder; Ollama nomic-embed-text ready)
+PROMPT_VER  : N/A
+PIPELINE_VER: phase7-v1
+TESTER      : automated (apps/api/scripts/eval_phase7_rag.py)
+NOTES       : All RAG retrieval and zero-tolerance cross-patient isolation targets
+              exceeded with 0 foreign chunks returned.
+
+--- END PHASE 7 ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

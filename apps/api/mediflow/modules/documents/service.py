@@ -22,7 +22,12 @@ from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mediflow.core.dependencies import enforce_patient_ownership
-from mediflow.modules.documents.models import Document, DocumentChunk, DocumentPage
+from mediflow.modules.documents.models import (
+    Document,
+    DocumentChunk,
+    DocumentEmbedding,
+    DocumentPage,
+)
 from mediflow.modules.documents.schemas import DocumentType, DocumentUpdateRequest
 from mediflow.modules.health_records.models import HealthEvent, HealthObservation
 from mediflow.modules.patients.models import PatientProfile
@@ -405,7 +410,10 @@ class DocumentService:
             file_path.unlink()
             logger.info("document_file_deleted", document_id=str(doc.id))
 
-        # SEC-016: Wipe derived pages & chunks and archive unconfirmed candidates
+        # SEC-016: Wipe derived embeddings, pages & chunks and archive unconfirmed candidates
+        await db.execute(
+            delete(DocumentEmbedding).where(DocumentEmbedding.document_id == doc.id)
+        )
         await db.execute(delete(DocumentPage).where(DocumentPage.document_id == doc.id))
         await db.execute(delete(DocumentChunk).where(DocumentChunk.document_id == doc.id))
         await db.execute(

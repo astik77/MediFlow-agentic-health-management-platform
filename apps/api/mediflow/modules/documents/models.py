@@ -239,3 +239,46 @@ Index(
     DocumentProcessingJob.document_id,
     DocumentProcessingJob.created_at.desc(),
 )
+
+
+class DocumentEmbedding(Base):
+    """
+    Patient-scoped dense vector embedding for a single DocumentChunk (Phase 7 RAG).
+    Carries explicit patient_id FK for zero-tolerance cross-patient isolation (SEC-003)
+    and CASCADE deletion on chunk/document wipe (SEC-016).
+    """
+
+    __tablename__ = "document_embeddings"
+    __table_args__ = (
+        UniqueConstraint("chunk_id", name="uq_document_embeddings_chunk_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chunk_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("document_chunks.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("documents.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    patient_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("patient_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    embedding_model: Mapped[str] = mapped_column(String(100), nullable=False)
+    dimensions: Mapped[int] = mapped_column(Integer, nullable=False)
+    embedding_vector: Mapped[list[float]] = mapped_column(JSON, nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+
+
+Index("ix_doc_embeddings_patient_doc", DocumentEmbedding.patient_id, DocumentEmbedding.document_id)

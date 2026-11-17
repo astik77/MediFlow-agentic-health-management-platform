@@ -84,3 +84,44 @@ class DocumentSummaryApiResponse(BaseModel):
     attempts: int
     summary: DocumentSummaryOutput
     generated_at: datetime
+
+
+# ---------------------------------------------------------------------------
+# Phase 7: Patient-Specific Hybrid RAG Schemas
+# ---------------------------------------------------------------------------
+
+
+class RagSearchRequest(BaseModel):
+    query: str = Field(..., min_length=2, max_length=500)
+    top_k: int = Field(default=5, ge=1, le=20)
+    document_type: str | None = Field(default=None, max_length=50)
+
+
+class RagSearchHitResponse(BaseModel):
+    chunk_id: uuid.UUID
+    document_id: uuid.UUID
+    document_title: str
+    document_type: str
+    document_date: str | None
+    page_start: int
+    page_end: int
+    section_heading: str | None
+    snippet: str
+    score: float
+    lexical_score: float
+    vector_score: float
+    match_type: str
+
+
+class RagSearchResponse(BaseModel):
+    query: str
+    embedding_model: str
+    total_hits: int
+    hits: list[RagSearchHitResponse]
+
+
+class RagReindexResponse(BaseModel):
+    documents_indexed: int
+    chunks_indexed: int
+    embedding_model: str
+    dimensions: int

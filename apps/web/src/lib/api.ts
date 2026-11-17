@@ -1,6 +1,8 @@
 import type {
   AIStatusResponse,
   DocumentSummaryApiResponse,
+  RagReindexResponse,
+  RagSearchResponse,
 } from "@/types/ai";
 import type {
   ConversationDetail,
@@ -475,6 +477,21 @@ export const aiApi = {
       `/api/v1/ai/documents/${documentId}/summarize`,
       { method: "POST" }
     ),
+
+  searchDocuments: (payload: {
+    query: string;
+    top_k?: number;
+    document_type?: string | null;
+  }): Promise<RagSearchResponse> =>
+    apiRequest<RagSearchResponse>("/api/v1/ai/rag/search", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  reindexDocuments: (): Promise<RagReindexResponse> =>
+    apiRequest<RagReindexResponse>("/api/v1/ai/rag/reindex", {
+      method: "POST",
+    }),
 };
 
 export const conversationsApi = {

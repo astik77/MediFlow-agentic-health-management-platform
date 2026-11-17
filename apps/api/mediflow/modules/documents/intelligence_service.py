@@ -23,11 +23,13 @@ from fastapi import HTTPException, status
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from mediflow.ai.rag.service import RagService
 from mediflow.core.config import get_settings
 from mediflow.core.dependencies import enforce_patient_ownership
 from mediflow.modules.documents.models import (
     Document,
     DocumentChunk,
+    DocumentEmbedding,
     DocumentPage,
     DocumentProcessingJob,
 )
@@ -227,8 +229,11 @@ class DocumentIntelligenceService:
                 overlap_chars=settings.document_chunk_overlap_chars,
             )
 
-            # Replace prior pages, chunks, and UNCONFIRMED candidate observations atomically
+            # Replace prior embeddings, pages, chunks, and UNCONFIRMED candidates atomically
             # (Confirmed observations are NEVER overwritten or deleted!)
+            await db.execute(
+                delete(DocumentEmbedding).where(DocumentEmbedding.document_id == doc.id)
+            )
             await db.execute(
                 delete(DocumentPage).where(DocumentPage.document_id == doc.id)
             )
@@ -275,6 +280,14 @@ class DocumentIntelligenceService:
                         },
                     )
                 )
+            await db.flush()
+
+            # Phase 7: Index patient-scoped RAG embeddings for generated chunks
+            rag_index_info = await RagService.index_document_chunks(
+                db=db,
+                document_id=doc.id,
+                patient_id=patient.id,
+            )
 
             # Persist candidate HealthObservations (NEVER confirmed automatically)
             for cand in all_candidates:
@@ -335,6 +348,8 @@ class DocumentIntelligenceService:
                 "total_pages": extraction.total_pages,
                 "pages_processed": extraction.pages_processed,
                 "chunks_created": len(chunks),
+                "embeddings_indexed": rag_index_info["indexed_chunks"],
+                "embedding_model": rag_index_info["embedding_model"],
                 "candidates_extracted": len(all_candidates),
                 "security_flags_count": len(all_findings),
             }

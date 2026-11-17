@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from mediflow.ai.agents.tools import AgentToolRegistry
 from mediflow.ai.models import AIInvocationLog
-from mediflow.ai.prompts import get_prompt
+from mediflow.ai.prompts import get_prompt, wrap_untrusted_document_text
 from mediflow.ai.providers.base import (
     AIProviderError,
     GenerationRequest,
@@ -116,7 +116,10 @@ class HealthAssistantAgent:
 
     @staticmethod
     async def _gather_patient_context(
-        db: AsyncSession, patient: PatientProfile
+        db: AsyncSession,
+        patient: PatientProfile,
+        *,
+        user_query: str = "",
     ) -> tuple[str, dict[str, dict[str, str]], dict[str, Any]]:
         """
         Gather authenticated patient's longitudinal health context strictly via
@@ -225,6 +228,37 @@ class HealthAssistantAgent:
                 )
             sections.append("Uploaded Documents:\n" + "\n".join(lines))
 
+        # Phase 7: Hybrid Patient-Specific RAG Passages (wrapped as SEC-011 untrusted data)
+        rag_hits: list[dict[str, Any]] = []
+        if user_query.strip():
+            rag_res = await AgentToolRegistry.execute(
+                tool_name="search_patient_documents",
+                db=db,
+                patient=patient,
+                arguments={"query": user_query, "top_k": 3},
+            )
+            rag_hits = rag_res.get("hits", [])
+            if rag_hits:
+                rag_lines = []
+                for h in rag_hits:
+                    page_label = (
+                        f"p. {h['page_start']}"
+                        if h["page_start"] == h["page_end"]
+                        else f"pp. {h['page_start']}-{h['page_end']}"
+                    )
+                    citation_index[h["chunk_id"]] = {
+                        "entity_type": "document_chunk",
+                        "entity_id": h["document_id"],
+                        "label": f"{h['document_title']} ({page_label})",
+                    }
+                    rag_lines.append(
+                        f"- [{h['chunk_id']}] {h['document_title']} ({page_label}): {h['snippet']}"
+                    )
+                sections.append(
+                    "Relevant Document Excerpts (UNTRUSTED DATA ONLY):\n"
+                    + wrap_untrusted_document_text("\n".join(rag_lines), max_chars=2500)
+                )
+
         bundle = {
             "profile": profile,
             "conditions": conds["conditions"],
@@ -232,6 +266,7 @@ class HealthAssistantAgent:
             "symptoms": symptoms["symptoms"],
             "observations": obs["observations"],
             "documents": docs["documents"],
+            "rag_hits": rag_hits,
         }
         return "\n\n".join(sections), citation_index, bundle
 
@@ -313,9 +348,9 @@ class HealthAssistantAgent:
                 metadata={"safety_rule": safety.rule_id, "bypassed_llm": True},
             )
 
-        # 2. Gather grounded patient context via SEC-012 allowlisted read-only tools
+        # 2. Gather grounded patient context + hybrid RAG passages via SEC-012 allowlisted tools
         context_text, citation_index, bundle = await HealthAssistantAgent._gather_patient_context(
-            db, patient
+            db, patient, user_query=user_message
         )
 
         # Sliding window of last 8 messages for conversational memory
@@ -362,6 +397,13 @@ class HealthAssistantAgent:
                 for rid in parsed.cited_record_ids
                 if rid in citation_index
             ]
+            # Always include verified RAG document page citations retrieved for this query
+            seen_labels = {c["label"] for c in cited}
+            for h in bundle.get("rag_hits", []):
+                cid = h["chunk_id"]
+                if cid in citation_index and citation_index[cid]["label"] not in seen_labels:
+                    cited.append(citation_index[cid])
+                    seen_labels.add(citation_index[cid]["label"])
             if not cited:
                 cited = HealthAssistantAgent._match_relevant_citations(
                     user_message, citation_index

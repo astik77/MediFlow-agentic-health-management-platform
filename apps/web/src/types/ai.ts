@@ -57,3 +57,33 @@ export interface AIStatusResponse {
   providers: ProviderHealthResponse[];
   prompt_registry: PromptRegistryItem[];
 }
+
+export interface RagSearchHit {
+  chunk_id: string;
+  document_id: string;
+  document_title: string;
+  document_type: string;
+  document_date: string | null;
+  page_start: number;
+  page_end: number;
+  section_heading: string | null;
+  snippet: string;
+  score: number;
+  lexical_score: number;
+  vector_score: number;
+  match_type: string;
+}
+
+export interface RagSearchResponse {
+  query: string;
+  embedding_model: string;
+  total_hits: number;
+  hits: RagSearchHit[];
+}
+
+export interface RagReindexResponse {
+  documents_indexed: number;
+  chunks_indexed: number;
+  embedding_model: string;
+  dimensions: number;
+}
