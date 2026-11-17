@@ -11,6 +11,7 @@ import {
   FileText,
   Clock,
   MessageSquareHeart,
+  LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthContext";
 
@@ -44,13 +45,17 @@ export function Navbar() {
                 MEDIFLOW
               </span>
               <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#2457A6] border border-blue-200 hidden sm:inline">
-                Phase 7
+                Phase 8
               </span>
             </div>
           </Link>
 
           {authenticated && (
             <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
+              <Link href="/dashboard" className={navLinkClass("/dashboard")}>
+                <LayoutDashboard className="w-4 h-4 text-[#2457A6]" />
+                Dashboard
+              </Link>
               <Link href="/health" className={navLinkClass("/health")}>
                 <HeartPulse className="w-4 h-4 text-[#2457A6]" />
                 My Health
@@ -76,6 +81,13 @@ export function Navbar() {
             <span className="text-xs text-[#667085]">Checking session...</span>
           ) : authenticated && user ? (
             <>
+              <Link
+                href="/dashboard"
+                className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-[#172033] hover:bg-slate-100"
+              >
+                <LayoutDashboard className="w-4 h-4 text-[#2457A6]" />
+                Dash
+              </Link>
               <Link
                 href="/health"
                 className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-[#172033] hover:bg-slate-100"

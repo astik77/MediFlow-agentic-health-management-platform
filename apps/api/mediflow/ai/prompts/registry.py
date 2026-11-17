@@ -158,6 +158,38 @@ _register(
     )
 )
 
+_register(
+    PromptTemplate(
+        prompt_id="health_summary_7d",
+        version="1.0.0",
+        task_type="health_summary_7d",
+        description=(
+            "Longitudinal 7-day (or custom window) patient health summary synthesizing "
+            "confirmed observations, active symptoms, conditions, and biomarker trends."
+        ),
+        system_prompt=(
+            f"{SAFETY_PREAMBLE}\n"
+            "Synthesize ONLY the confirmed patient records and deterministic trend statistics "
+            "provided below for the specified window. Never diagnose, prescribe, or invent "
+            "measurements. Return ONLY a JSON object with exact keys: "
+            '{"patient_id": "<uuid>", "headline": "<concise 1-line headline>", '
+            '"summary_text": "<2-4 clear, supportive sentences summarizing the period>", '
+            '"highlights": ["<factual bullet>", ...], '
+            '"questions_for_doctor": ["<helpful discussion question>", ...], '
+            '"informational_disclaimer": "<informational only, not medical advice>"}.'
+        ),
+        user_template=(
+            "Patient ID: {patient_id}\n"
+            "Longitudinal Health Summary Window: Last {window_days} days "
+            "({period_start} to {period_end})\n\n"
+            "Period Metrics Snapshot:\n{metrics_context}\n\n"
+            "Confirmed Observations & Notable Trends:\n{trends_context}\n\n"
+            "Active Conditions, Allergies & Recent Symptoms:\n{clinical_context}\n\n"
+            "Produce the strictly informational JSON health summary for this patient."
+        ),
+    )
+)
+
 
 def get_prompt(prompt_id: str, version: str | None = None) -> PromptTemplate:
     """Fetch a registered prompt template by ID (defaults to latest registered version)."""

@@ -1,27 +1,29 @@
 MEDIFLOW — BASELINE STATUS
 ===========================
-Version: 1.7.0
+Version: 1.8.0
 Date: 2026-11-18
-Phase: 7 (Patient-Specific Hybrid RAG)
-Status: PHASES 0–7 VERIFIED | ALL 18/18 SECURITY CONTROLS (SEC-001–018) PASSED
+Phase: 8 (Dashboard Analytics, Biomarker Trends & 7-Day Health Summaries)
+Status: PHASES 0–8 VERIFIED | ALL 18/18 SECURITY CONTROLS (SEC-001–018) PASSED
 
 ================================================================
 EXECUTIVE SUMMARY
 ================================================================
-Phases 0 through 7 are implemented and verified. MEDIFLOW now provides
-strictly patient-scoped Hybrid RAG (Okapi BM25 lexical + cosine dense
-vector Reciprocal Rank Fusion) backed by `document_embeddings`, local
-Ollama `nomic-embed-text` (with deterministic zero-dependency offline
-fallback), automatic indexing on document processing, immediate vector
-wipe on document archival (`SEC-016`), Smart Health Search UI inside
-`/documents`, and page-level document citations inside the AI Health
-Assistant (`/assistant`).
+Phases 0 through 8 are implemented and verified. MEDIFLOW now provides
+a patient-scoped Longitudinal Health Dashboard (`/dashboard`) backed by
+`/api/v1/analytics/*`, a unit-safe deterministic biomarker trend engine
+with reference-range bound parsing and strict Candidate Governance
+(unconfirmed candidates never contaminate trend charts or KPI totals),
+persisted 7-day (or custom 7–90 day) longitudinal health summaries in
+`health_summaries` (`0009_phase8_health_summaries.py`) using local Ollama
+(`health_summary_7d@1.0.0` with `SEC-013`/`SEC-014` enforcement) and a
+seamless deterministic statistical fallback when offline, plus Recharts
+interactive trend visualizations and a unified Pending Review Queue.
 
 All 18 security controls in the MEDIFLOW Security Model (`SEC-001`
-through `SEC-018`) are now implemented and verified by automated tests.
+through `SEC-018`) remain implemented and verified by automated tests.
 
-Dashboard Analytics & 7-Day Health Summaries (Phase 8) and Final
-Hardening & Data Export (Phase 9) remain next.
+Final Security Hardening, Patient Data Export, Account Deletion &
+Release Verification (Phase 9) remains as the final milestone.
 
 ================================================================
 COMPONENT STATUS & BASELINE READINESS
@@ -31,24 +33,25 @@ COMPONENT STATUS & BASELINE READINESS
    - Status: IMPLEMENTED & VERIFIED
    - Framework: FastAPI 0.163.1 + Pydantic v2 (Python 3.11)
    - Modules Active: auth, patients, health_records, timeline, documents,
-     conversations, ai (providers, prompts, safety, agents, rag)
-   - Test Results: 150/150 automated tests PASSED (100% pass rate, 125.04s, 0 warnings)
-     - 54 unit tests | 61 API integration tests | 35 security & safety tests
+     conversations, analytics, ai (providers, prompts, safety, agents, rag)
+   - Test Results: 162/162 automated tests PASSED (100% pass rate, 143.86s, 0 warnings)
+     - 59 unit tests | 65 API integration tests | 38 security & safety tests
    - Linting (Ruff): 0 errors across mediflow/, tests/, migrations/, scripts/
 
 2. DATABASE & ORM
-   - Status: PHASE 7 SCHEMA MIGRATIONS READY
-   - Migrations: 0001 through 0008_phase7_rag_embeddings (`document_embeddings`)
+   - Status: PHASE 8 SCHEMA MIGRATIONS READY
+   - Migrations: 0001 through 0009_phase8_health_summaries (`health_summaries`)
    - Verification: Alembic upgrade & downgrade SQL verified cleanly
 
 3. FRONTEND APPLICATION
-   - Status: PHASE 7 UI IMPLEMENTED & VERIFIED
-   - Framework: Next.js 15.3.9 (App Router) + TypeScript + Tailwind CSS
+   - Status: PHASE 8 UI IMPLEMENTED & VERIFIED
+   - Framework: Next.js 15.3.9 (App Router) + TypeScript + Tailwind CSS + Recharts
    - Pages Implemented: /, /login, /register, /forgot-password, /onboarding,
-     /profile, /health, /documents (with Smart Hybrid RAG Search),
+     /profile, /dashboard (KPIs, Recharts Biomarker Trends, Review Queue,
+     7-Day Summaries), /health, /documents (with Smart Hybrid RAG Search),
      /documents/[id], /timeline, /assistant
    - Verification: tsc --noEmit (0 errors), next lint (0 warnings/errors),
-     next build (14/14 static + /documents/[id] dynamic built in 5.0s)
+     next build (15/15 static + /documents/[id] dynamic built in 28.0s)
 
 4. MEASURED EVALUATION BASELINES
    - Phase 4 OCR/DC/NE: CER 0.36%, WER 4.17%, Completeness 100%, DC 100%, NE 100%
@@ -56,15 +59,16 @@ COMPONENT STATUS & BASELINE READINESS
    - Phase 6 AIR-004 (Safety Constraint Pass Rate — DS-SAFE-001): 100.0% (30/30, 0 failures)
    - Phase 7 RAG (DS-RAG-001 & DS-RAG-002): Recall@5=100%, Precision@1=100%,
      MRR=1.00, CitationCorrectness=100%, RAG-008 Cross-Patient Rate=0.00 (0 leaks)
+   - Phase 8 Analytics & Trends: 12/12 new unit/API/security tests passed (100%)
 
 5. SECURITY CONTROLS (SEC-001 through SEC-018 — 18/18 PASSED)
-   - SEC-001 / SEC-002 (Cross-patient access across all modules): PASSED
+   - SEC-001 / SEC-002 (Cross-patient access across all modules including analytics): PASSED
    - SEC-003 (Cross-patient RAG retrieval — RAG-008 = 0.00): PASSED
    - SEC-004 / SEC-005 / SEC-006 (Auth, expired & revoked sessions): PASSED
    - SEC-007 / SEC-008 / SEC-009 / SEC-010 (Upload MIME, magic, traversal, size): PASSED
    - SEC-011 (Prompt injection detection & untrusted delimiters): PASSED
    - SEC-012 (Allowlisted read-only / proposal-only AI tools): PASSED
-   - SEC-013 (Hallucinated foreign patient_id rejection): PASSED
+   - SEC-013 (Hallucinated foreign patient_id rejection on doc & 7-day summaries): PASSED
    - SEC-014 (External AI Privacy Firewall blocking real data): PASSED
    - SEC-015 (Sensitive credentials & raw transcripts redacted in logs): PASSED
    - SEC-016 (Archive wipes disk, pages, chunks, embeddings & unconfirmed candidates): PASSED
@@ -74,5 +78,5 @@ COMPONENT STATUS & BASELINE READINESS
 ================================================================
 NEXT MILESTONES
 ================================================================
-- Obtain user approval for Phase 7 Completion
-- Proceed to Phase 8: Dashboard Analytics, Biomarker Trends & 7-Day Health Summaries
+- Obtain user approval for Phase 8 Completion
+- Proceed to Phase 9: Security Hardening, Patient Data Export, Account Deletion & Release Verification

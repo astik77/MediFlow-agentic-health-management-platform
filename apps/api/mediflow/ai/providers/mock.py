@@ -46,7 +46,36 @@ class MockAIProvider:
         elif request.expect_json:
             pid_match = _PATIENT_ID_RE.search(request.user_prompt)
             pid = pid_match.group(1) if pid_match else "00000000-0000-0000-0000-000000000000"
-            if "Latest Patient Message:" in request.user_prompt:
+            if "Longitudinal Health Summary Window:" in request.user_prompt:
+                # Phase 8 7-Day Health Summary deterministic local AI response
+                content = json.dumps(
+                    {
+                        "patient_id": pid,
+                        "headline": "Personal Longitudinal Health Summary",
+                        "summary_text": (
+                            "Over the selected window, your confirmed observations, ongoing "
+                            "symptoms, and uploaded records were reviewed. Any out-of-range "
+                            "biomarkers or notable trends are highlighted below for discussion "
+                            "with your healthcare provider."
+                        ),
+                        "highlights": [
+                            "Confirmed longitudinal observations and active symptoms summarized.",
+                            "Unconfirmed document candidates were excluded pending your review.",
+                        ],
+                        "questions_for_doctor": [
+                            (
+                                "Are any recent changes in my tracked biomarkers "
+                                "clinically meaningful?"
+                            ),
+                            "Should I repeat any out-of-range lab measurements at my next visit?",
+                        ],
+                        "informational_disclaimer": (
+                            "This longitudinal health summary is strictly informational and does "
+                            "not constitute medical advice, diagnosis, or treatment."
+                        ),
+                    }
+                )
+            elif "Latest Patient Message:" in request.user_prompt:
                 # Phase 6 AI Health Assistant deterministic response
                 user_msg = request.user_prompt.split("Latest Patient Message:", 1)[1].strip()
                 mentions_symptom = any(

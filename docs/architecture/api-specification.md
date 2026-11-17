@@ -327,3 +327,29 @@ Executes hybrid Okapi BM25 lexical + cosine dense vector retrieval merged via Re
 ### `POST /api/v1/ai/rag/reindex`
 Re-embeds all active processed `document_chunks` for the authenticated patient using Ollama `nomic-embed-text` (when online) or deterministic local `local-hash-256-v1` fallback.
 - **200 OK:** `RagReindexResponse` (`documents_indexed`, `chunks_indexed`, `embedding_model`, `dimensions`).
+
+---
+
+## 11. Dashboard Analytics, Biomarker Trends & 7-Day Summaries (`/api/v1/analytics`)
+
+All endpoints require authentication (`401 Unauthorized` — `SEC-004`) and strictly derive scope from the authenticated patient session (`SEC-001/SEC-002`). Unconfirmed `candidate` and `rejected` observations never contaminate trend series or confirmed KPI counts.
+
+### `GET /api/v1/analytics/dashboard`
+Returns aggregated patient KPIs (`active_conditions_count`, `active_allergies_count`, `ongoing_symptoms_count`, `confirmed_observations_count`, `abnormal_observations_count`, `documents_count`, `pending_candidates_count`, `pending_symptom_proposals_count`), recent confirmed out-of-range observations, documents with pending candidate observations awaiting review, available trend biomarkers, and the latest persisted longitudinal health summary.
+- **200 OK:** `DashboardResponse`
+
+### `GET /api/v1/analytics/trends`
+Computes chronological, unit-safe longitudinal biomarker time-series and deterministic statistics (`latest_value`, `previous_value`, `delta_absolute`, `delta_percent`, `direction`, `min_value`, `max_value`, `mean_value`, `reference_low`, `reference_high`).
+- **Query Parameters:** `window` (`30d` | `90d` | `1y` | `all`, default `all`), `biomarker` (optional case-insensitive display name filter)
+- **200 OK:** `BiomarkerTrendsResponse`
+
+### `POST /api/v1/analytics/summaries`
+Generates and persists a longitudinal health summary (`health_summaries`) covering the last `window_days` days (default `7`, range `7–90`) and logs a `"summary"` event on the patient's Medical Timeline.
+- **Request Body:** `{ "window_days": 7 }` (optional; defaults to `7`)
+- **AI Governance:** Uses local Ollama (`health_summary_7d@1.0.0`) with `SEC-014` local-only routing and `SEC-013` `patient_id` validation when online, falling back seamlessly to a deterministic statistical summary (`generation_mode = "deterministic_fallback"`) when offline or if validation fails.
+- **201 Created:** `HealthSummaryResponse`
+
+### `GET /api/v1/analytics/summaries`
+Lists the authenticated patient's persisted historical health summaries ordered by `created_at DESC`.
+- **Query Parameters:** `limit` (`1–100`, default `20`)
+- **200 OK:** `HealthSummaryListResponse`

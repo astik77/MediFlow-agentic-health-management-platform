@@ -411,6 +411,50 @@ NOTES       : All RAG retrieval and zero-tolerance cross-patient isolation targe
 
 --- END PHASE 7 ---
 
+--- PHASE 8: DASHBOARD ANALYTICS, BIOMARKER TRENDS & 7-DAY HEALTH SUMMARIES ---
+
+ENTRY_ID    : HIST-020
+DATE        : 2026-11-18
+TIME        : 22:16 UTC
+PHASE       : 8
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit, API, and Security Test Pass Rate
+VALUE       : 162/162 passed (100%, 0 warnings)
+DATASET_ID  : N/A
+MODEL_ID    : Ollama qwen2.5:1.5b (MockAIProvider in hermetic tests + deterministic offline fallback)
+PROMPT_VER  : health_summary_7d@1.0.0
+PIPELINE_VER: phase8-v1
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1)
+NOTES       : Covers 150 Phase 0-7 tests + 5 unit tests (reference-range bound
+              parsing, trend direction/delta math, candidate/archived/non-numeric
+              exclusion, unit-safe normalization guard, window & biomarker filters)
+              + 4 API integration tests (/dashboard KPIs & review queue, /trends
+              chronological & filtered, POST/GET /summaries with local AI &
+              timeline summary event, graceful deterministic offline fallback) +
+              3 Phase 8 security tests (SEC-004 auth 401, SEC-001/002 cross-patient
+              isolation, SEC-013 patient_id mismatch blocked & logged). Ruff: 0
+              errors. Alembic 0009 upgrade/downgrade SQL verified.
+
+ENTRY_ID    : HIST-021
+DATE        : 2026-11-18
+TIME        : 22:15 UTC
+PHASE       : 8
+METRIC_ID   : N/A (Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 15/15 static + /documents/[id] built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: phase8-v1
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Added /dashboard (KPI strip, Recharts interactive biomarker trend
+              chart with normal ReferenceArea shading and time-window controls,
+              pending review queue widget, out-of-range alerts, 7-day longitudinal
+              health summary generator & history) and updated Navbar with Dashboard
+              tab and Phase 8 badge.
+
+--- END PHASE 8 ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

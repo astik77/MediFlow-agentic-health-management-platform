@@ -5,6 +5,13 @@ import type {
   RagSearchResponse,
 } from "@/types/ai";
 import type {
+  BiomarkerTrendsResponse,
+  DashboardResponse,
+  HealthSummaryItem,
+  HealthSummaryListResponse,
+  TrendWindow,
+} from "@/types/analytics";
+import type {
   ConversationDetail,
   ConversationItem,
   ConversationMessage,
@@ -537,5 +544,34 @@ export const conversationsApi = {
         method: "POST",
         body: JSON.stringify({ decision }),
       }
+    ),
+};
+
+export const analyticsApi = {
+  getDashboard: (): Promise<DashboardResponse> =>
+    apiRequest<DashboardResponse>("/api/v1/analytics/dashboard"),
+
+  getTrends: (params?: {
+    window?: TrendWindow;
+    biomarker?: string;
+  }): Promise<BiomarkerTrendsResponse> => {
+    const query = new URLSearchParams();
+    if (params?.window) query.set("window", params.window);
+    if (params?.biomarker) query.set("biomarker", params.biomarker);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return apiRequest<BiomarkerTrendsResponse>(
+      `/api/v1/analytics/trends${suffix}`
+    );
+  },
+
+  generateSummary: (windowDays = 7): Promise<HealthSummaryItem> =>
+    apiRequest<HealthSummaryItem>("/api/v1/analytics/summaries", {
+      method: "POST",
+      body: JSON.stringify({ window_days: windowDays }),
+    }),
+
+  listSummaries: (limit = 20): Promise<HealthSummaryListResponse> =>
+    apiRequest<HealthSummaryListResponse>(
+      `/api/v1/analytics/summaries?limit=${limit}`
     ),
 };

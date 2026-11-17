@@ -14,6 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from mediflow.api.v1.routers import ai as ai_router
+from mediflow.api.v1.routers import analytics as analytics_router
 from mediflow.api.v1.routers import auth as auth_router
 from mediflow.api.v1.routers import conversations as conversations_router
 from mediflow.api.v1.routers import documents as documents_router
@@ -101,6 +102,7 @@ def create_application() -> FastAPI:
     app.include_router(documents_router.router, prefix=settings.api_prefix)
     app.include_router(ai_router.router, prefix=settings.api_prefix)
     app.include_router(conversations_router.router, prefix=settings.api_prefix)
+    app.include_router(analytics_router.router, prefix=settings.api_prefix)
 
     return app
 

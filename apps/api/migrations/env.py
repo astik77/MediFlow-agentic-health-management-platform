@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Import all models so their tables are registered on Base.metadata
 import mediflow.ai.models
+import mediflow.modules.analytics.models
 import mediflow.modules.auth.models
 import mediflow.modules.conversations.models
 import mediflow.modules.documents.models

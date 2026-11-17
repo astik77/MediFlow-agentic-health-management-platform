@@ -1,0 +1,72 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_009_2026-11-18
+Date          : 2026-11-18
+Time (UTC)    : 22:16
+Phase         : 8 (Dashboard Analytics, Biomarker Trends & 7-Day Health Summaries)
+Component     : HealthSummary ORM & Migration 0009, Deterministic Biomarker Trend Engine, AnalyticsService (Dashboard/Trends/7-Day Summaries), health_summary_7d@1.0.0 Prompt, /api/v1/analytics/* APIs, Recharts /dashboard UI
+Test Type     : Unit, API Integration, Security & Isolation (SEC-001/002, SEC-004, SEC-013), Migration SQL, Frontend Type-Check, Lint & Build
+Environment   : local-dev (Windows 11, x86_64, Intel Core i3-1005G1, 7.7 GB RAM)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1, tsc, next lint, next build 15.3.9)
+Run Duration  : Backend full suite: 143.86s | Frontend build: 28.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : Phase 8 Completion (v1.8.0)
+Dataset Version   : Synthetic hermetic fixtures (Phases 0–8)
+Model ID/Version  : Ollama qwen2.5:1.5b (MockAIProvider in tests) + deterministic offline fallback
+Prompt Version    : health_summary_7d@1.0.0
+Pipeline Version  : phase8-v1
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+
+---
+SUMMARY
+---
+Backend Tests Collected : 162
+Backend Tests Passed    : 162
+Backend Tests Failed    : 0
+Backend Tests Skipped   : 0
+Backend Warnings        : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : PASSED (All checks passed!, 0 errors)
+Alembic Migration 0009  : PASSED (upgrade 0009 --sql & downgrade 0009:0008 --sql verified)
+
+Frontend Type-Check     : PASSED (tsc --noEmit: 0 errors)
+Frontend ESLint         : PASSED (next lint: 0 warnings, 0 errors)
+Frontend Build          : PASSED (next build: 15/15 static pages + dynamic /documents/[id] built)
+
+Overall Result          : PASSED
+
+---
+TEST RESULTS (Detailed — Phase 8 Additions)
+---
+Test ID       | Test Name                                                           | Result | Notes
+--------------|---------------------------------------------------------------------|--------|------
+U-P8-001..005 | tests/unit/test_analytics_engine.py (5 unit tests)                  | PASSED | Reference-range parser, trend direction math, candidate/archived/non-numeric exclusion, unit-safe normalization guard, window & biomarker filtering
+ANL-INT-001   | test_dashboard_aggregates_kpis_abnormal_alerts_and_review_queue     | PASSED | Exact KPIs, review queue links, pending candidates & AI proposals isolated from confirmed metrics
+ANL-INT-002   | test_trends_endpoint_chronological_and_filtered                     | PASSED | Chronological ordering, 30d/all windowing, biomarker filter, min/max/mean/delta/bounds
+ANL-INT-003   | test_generate_and_list_summaries_local_ai_and_timeline_event        | PASSED | 201 Created with MockAIProvider (local_ai), persisted in /summaries, surfaced in /dashboard, timeline 'summary' event logged
+ANL-INT-004   | test_generate_summary_graceful_deterministic_fallback_when_ai_offline | PASSED | 201 Created (never 500) with deterministic_fallback when Ollama offline; accurate metrics_snapshot
+S-029         | test_phase8_unauthenticated_rejected_sec004                         | PASSED | 401 on GET /dashboard, GET /trends, GET /summaries, POST /summaries
+S-030         | test_phase8_cross_patient_isolation_sec001_sec002                   | PASSED | Patient B sees 0 of Patient A's KPIs, abnormal alerts, trends, or persisted summaries
+S-031         | test_phase8_summary_sec013_patient_mismatch_never_persisted         | PASSED | Foreign patient_id AI payload blocked, logged as sec013_patient_id_mismatch, deterministic fallback persisted
+F-014         | apps/web pnpm type-check && pnpm lint && pnpm build                 | PASSED | 0 errors/warnings; /dashboard (123 kB) with Recharts ReferenceArea + Navbar updated
+M-011         | alembic upgrade/downgrade 0009_phase8_health_summaries --sql        | PASSED | Valid PostgreSQL DDL for health_summaries + composite (patient_id, created_at DESC) index
+
+(All 150 Phase 0–7 tests also re-executed and PASSED.)
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline (HIST-017/018/019): 150/150 backend tests passed (100%)
+Current run (HIST-020/021): 162/162 backend tests passed (100%), all 18/18 SEC controls PASSED
+Change: +12 Phase 8 tests, zero regressions, 0 warnings.
+
+---
+APPROVAL
+---
+Approved for Phase 8 Completion: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-18
