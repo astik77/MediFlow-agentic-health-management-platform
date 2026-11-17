@@ -12,13 +12,13 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+# Import all models so their tables are registered on Base.metadata
+import mediflow.modules.auth.models
+import mediflow.modules.patients.models  # noqa: F401
+
 # Import application settings and Base (which carries all model metadata)
 from mediflow.core.config import get_settings
-from mediflow.core.database import Base  # noqa: F401
-
-# Import all models so their tables are registered on Base.metadata
-# Add new model imports here as they are created in later phases
-# from mediflow.modules.auth.models import *  # noqa: F401, F403
+from mediflow.core.database import Base
 
 config = context.config
 settings = get_settings()

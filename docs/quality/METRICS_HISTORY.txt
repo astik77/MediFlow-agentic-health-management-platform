@@ -74,6 +74,43 @@ NOTES       : Tests cover config unit tests (13) and health endpoint
 
 --- END PHASE 0 ---
 
+--- PHASE 1: AUTHENTICATION AND PATIENT PROFILE ---
+
+ENTRY_ID    : HIST-002
+DATE        : 2026-11-18
+TIME        : 18:58 UTC
+PHASE       : 1
+METRIC_ID   : N/A (Backend Test Suite)
+METRIC_NAME : Backend Unit, API, and Security Test Pass Rate
+VALUE       : 50/50 passed (100%)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: Phase 1 implementation
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5)
+NOTES       : Covers 25 Phase 0 tests + 8 Argon2id/token unit tests +
+              10 auth API tests + 3 patient profile/onboarding tests +
+              4 Phase 1 security tests (SEC-001/002 cross-patient access,
+              SEC-004 auth bypass, SEC-005 expired session, SEC-006
+              session revocation/replay). Ruff lint: 0 errors.
+
+ENTRY_ID    : HIST-003
+DATE        : 2026-11-18
+TIME        : 18:57 UTC
+PHASE       : 1
+METRIC_ID   : N/A (Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 10/10 pages built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: Phase 1 implementation
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Routes built: /, /login, /register, /forgot-password,
+              /onboarding, /profile.
+
+--- END PHASE 1 ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

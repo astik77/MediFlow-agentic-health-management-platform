@@ -129,10 +129,10 @@ Patient Portal will be live at: `http://localhost:3000`
 
 ## 5. Development Roadmap
 
-- [x] **Phase 0: Workspace Inspection & Project Foundation** *(Current)*
+- [x] **Phase 0: Workspace Inspection & Project Foundation**
   - Monorepo scaffolding, async database engine, health check endpoints, quality management framework, 25/25 automated tests passing.
-- [ ] **Phase 1: Authentication & Patient Profile**
-  - Argon2id password hashing, secure session management, onboarding workflow, patient ownership validation.
+- [x] **Phase 1: Authentication & Patient Profile** *(Current)*
+  - Argon2id password hashing, HttpOnly server-managed sessions, session revocation, password recovery, patient onboarding & profile UI, backend ownership enforcement (SEC-001/002, SEC-004, SEC-005, SEC-006), 50/50 backend tests passing.
 - [ ] **Phase 2: Medical History Foundation**
   - Health events, observations, symptoms, allergies, chronological timeline APIs.
 - [ ] **Phase 3: Secure Document Management**

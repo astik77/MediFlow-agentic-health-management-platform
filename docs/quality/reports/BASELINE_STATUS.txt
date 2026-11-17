@@ -1,79 +1,82 @@
 MEDIFLOW — BASELINE STATUS
 ===========================
-Version: 1.0.0
-Date: 2026-11-16
-Phase: 0 (Foundation)
-Status: INITIALIZING / PENDING FULL VERIFICATION
+Version: 1.1.0
+Date: 2026-11-18
+Phase: 1 (Authentication and Patient Profile)
+Status: PHASE 0 & PHASE 1 VERIFIED
 
 ================================================================
 EXECUTIVE SUMMARY
 ================================================================
-Phase 0 establishes the engineering, architectural, and quality
-foundations for MEDIFLOW. Core frameworks, linting, packaging,
-project scaffolding, and health endpoints have been constructed.
+Phase 0 (Foundation) and Phase 1 (Authentication & Patient Profile)
+have been implemented and verified. Secure patient registration,
+Argon2id password hashing, HttpOnly server-managed sessions,
+session revocation, password recovery, patient onboarding, profile
+management, and strict server-side patient ownership checks are live.
 
 All AI models, OCR pipelines, document processing algorithms, and
-RAG vector retrieval capabilities are not yet introduced (scheduled
-for Phases 3 through 7). Hence, quality baseline measurements for
-AI/OCR are categorized as "NOT YET APPLICABLE / NOT RUN".
+RAG vector retrieval capabilities remain scheduled for Phases 3-7
+and are categorized as "NOT YET APPLICABLE / NOT RUN".
 
 ================================================================
 COMPONENT STATUS & BASELINE READINESS
 ================================================================
 
-1. BACKEND API & CONFIGURATION
+1. BACKEND API, AUTHENTICATION & PATIENT PROFILES
    - Status: IMPLEMENTED & VERIFIED
    - Framework: FastAPI 0.163.1 + Pydantic v2 (Python 3.11)
-   - Configuration: Strict Pydantic Settings, Argon2id config,
-     AI safety guardrails (external AI disabled by default)
-   - Test Results: 25/25 automated tests PASSED (100% pass rate)
-     - 13 unit tests for configuration & security properties
-     - 12 API tests for /health & /api/v1/health endpoints
-   - Execution Time: 41.06s in pytest environment
+   - Security: Argon2id password hashing, SHA-256 hashed 256-bit
+     opaque sessions, HttpOnly cookies, server-side ownership checks
+   - Test Results: 50/50 automated tests PASSED (100% pass rate)
+     - 13 config unit tests
+     - 8 security crypto unit tests (Argon2id & tokens)
+     - 12 health API tests
+     - 10 auth API integration tests (register, login, logout, reset)
+     - 3 patient profile & onboarding API tests
+     - 4 security tests (SEC-001/002, SEC-004, SEC-005, SEC-006)
+   - Linting (Ruff): 0 errors across mediflow/, tests/, migrations/
 
 2. DATABASE & ORM
-   - Status: SCAFFOLDED
+   - Status: PHASE 1 SCHEMA MIGRATION READY
    - Engine: Async SQLAlchemy 2.0 + asyncpg / psycopg2-binary
-   - Migration Tool: Alembic configured with async runner & conventions
-   - Target DB: PostgreSQL 16 + pgvector extension
-   - Baseline Status: Pending initial database container startup
+   - Migration: 0001_phase1_auth_patients (users, sessions,
+     password_reset_tokens, patient_profiles)
+   - Verification: Alembic upgrade & downgrade SQL generation verified;
+     full relational integration verified via async SQLite in-memory tests
 
-3. FRONTEND FOUNDATION
-   - Status: IMPLEMENTED & CONFIGURED
-   - Framework: Next.js (App Router) + TypeScript + Tailwind CSS
-   - Component Library: shadcn/ui + Lucide icons
-   - State & Forms: TanStack Query v5 + React Hook Form + Zod
-   - Charts: Recharts
-   - Baseline Status: Ready for lint & typecheck validation
+3. FRONTEND APPLICATION
+   - Status: PHASE 1 UI IMPLEMENTED & VERIFIED
+   - Framework: Next.js 15.3.9 (App Router) + TypeScript + Tailwind CSS
+   - Pages Implemented: /, /login, /register, /forgot-password,
+     /onboarding, /profile
+   - Auth State: TanStack Query + HttpOnly session cookies (no localStorage)
+   - Verification: tsc --noEmit (0 errors), next lint (0 warnings/errors),
+     next build (10/10 pages built cleanly)
 
 4. DOCUMENT INTELLIGENCE & OCR
    - Target Phase: Phase 4
-   - Baseline Status: NOT RUN (No models or datasets active in Phase 0)
-   - Target Baseline Metrics:
-     - Character Error Rate (CER) < 5%
-     - Word Error Rate (WER) < 10%
-     - Exact Numerical Extraction Match > 95%
+   - Baseline Status: NOT RUN
 
 5. LOCAL AI INFRASTRUCTURE & ASSISTANT
    - Target Phase: Phases 5 & 6
    - Baseline Status: NOT RUN
    - Hardware Constraint Noted: Intel Core i3-1005G1, 7.7 GB RAM,
      integrated UHD GPU (1 GB VRAM).
-   - Candidate local model tier: qwen2.5:1.5b / phi3.5:3.8b
 
 6. PATIENT-SPECIFIC RAG & RETRIEVAL
    - Target Phase: Phase 7
    - Baseline Status: NOT RUN
-   - Cross-patient isolation: Required 100% (Zero tolerance for leakage)
 
 7. SECURITY CONTROLS (SEC-001 through SEC-018)
-   - Status: Architecture and test matrix specified in security-model.md
-   - Baseline Execution: Scheduled incrementally across Phases 1, 3, 7, 9
+   - SEC-001 / SEC-002 (Cross-patient access — Profiles): PASSED
+   - SEC-004 (Authentication bypass): PASSED
+   - SEC-005 (Expired session access): PASSED
+   - SEC-006 (Session revocation & replay): PASSED
+   - SEC-014 (External AI disabled by default): PASSED
+   - Remaining SEC tests: Scheduled for Phases 2, 3, 4, 7, and 9
 
 ================================================================
 NEXT MILESTONES
 ================================================================
-- Verify Docker daemon and PostgreSQL + pgvector container
-- Apply baseline Alembic migration
-- Execute frontend type-check & build verification
-- Finalize Phase 0 verification report
+- Obtain approval for Phase 1 Completion
+- Proceed to Phase 2: Medical History Foundation
