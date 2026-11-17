@@ -1,19 +1,29 @@
 """
 Patient Profile API Endpoints (v1)
-Handles profile retrieval, demographic updates, onboarding, and ownership enforcement.
+Handles profile retrieval, demographic updates, onboarding, portable data export,
+cascading account erasure, and ownership enforcement.
 """
 from __future__ import annotations
 
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from mediflow.api.v1.routers.auth import clear_session_cookie
 from mediflow.core.database import get_db
-from mediflow.core.dependencies import enforce_patient_ownership, get_current_patient
+from mediflow.core.dependencies import (
+    enforce_patient_ownership,
+    get_current_patient,
+    get_current_user,
+)
+from mediflow.modules.auth.models import User
 from mediflow.modules.patients.models import PatientProfile
 from mediflow.modules.patients.schemas import (
+    AccountDeletionRequest,
+    AccountDeletionResponse,
+    PatientExportResponse,
     PatientOnboardingRequest,
     PatientProfileResponse,
     PatientProfileUpdate,
@@ -71,6 +81,54 @@ async def complete_onboarding(
         onboarding_data=payload,
     )
     return updated
+
+
+@router.get(
+    "/export",
+    response_model=PatientExportResponse,
+    summary="Export authenticated patient's full longitudinal health vault (JSON)",
+)
+async def export_patient_vault(
+    current_user: User = Depends(get_current_user),
+    current_patient: PatientProfile = Depends(get_current_patient),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """
+    Export all health records, observations, timeline events, document metadata,
+    conversations, and longitudinal summaries belonging to the authenticated patient.
+    """
+    return await PatientService.export_patient_data(
+        db=db,
+        user=current_user,
+        patient=current_patient,
+    )
+
+
+@router.delete(
+    "/account",
+    response_model=AccountDeletionResponse,
+    summary="Permanently delete patient account and all associated data & files",
+)
+async def delete_patient_account(
+    payload: AccountDeletionRequest,
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    current_patient: PatientProfile = Depends(get_current_patient),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """
+    Verify current password and explicit confirmation phrase, remove all uploaded
+    files from disk, permanently erase all database records across all tables,
+    and clear the HttpOnly session cookie.
+    """
+    result = await PatientService.delete_patient_account(
+        db=db,
+        user=current_user,
+        patient=current_patient,
+        payload=payload,
+    )
+    clear_session_cookie(response)
+    return result
 
 
 @router.get(

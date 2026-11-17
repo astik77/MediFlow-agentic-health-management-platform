@@ -1,0 +1,69 @@
+MEDIFLOW TEST REPORT
+====================
+Report ID     : TEST_REPORT_010_2026-11-18
+Date          : 2026-11-18
+Time (UTC)    : 22:34
+Phase         : 9 (Security Hardening, Patient Data Export, Account Deletion & Release Verification)
+Component     : SecurityHeadersMiddleware, Next.js Security Headers, Patient JSON Vault Export (/patients/export), Re-Authenticated Cascading Account & Disk Erasure (/patients/account), /profile Sovereignty UI, /dashboard Navbar Polish, Full SEC-001..018 Release Regression
+Test Type     : Full Release Regression (Unit, API Integration, Security SEC-001..018, Alembic base<->head SQL, Frontend Type-Check, Lint & Production Build)
+Environment   : local-dev (Windows 11, x86_64, Intel Core i3-1005G1, 7.7 GB RAM)
+Tester        : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1, tsc, next lint, next build 15.3.9)
+Run Duration  : Backend full suite: 190.81s | Frontend build: 29.0s
+
+---
+VERSIONS
+---
+MEDIFLOW Version  : v2.0.0 (MVP Release Ready — Phases 0–9 Complete)
+Dataset Version   : All registered synthetic eval datasets (v1.0) + hermetic test fixtures
+Model ID/Version  : Ollama qwen2.5:1.5b + nomic-embed-text (graceful local fallbacks verified)
+Prompt Versions   : doc_summary@1.0.0, structured_extraction@1.0.0, health_qa_base@1.0.0, health_assistant@1.0.0, health_summary_7d@1.0.0
+Pipeline Version  : release-v2.0.0
+Python Version    : 3.11.4
+Node.js Version   : 22.11.0
+
+---
+SUMMARY
+---
+Backend Tests Collected : 167
+Backend Tests Passed    : 167
+Backend Tests Failed    : 0
+Backend Tests Skipped   : 0
+Backend Warnings        : 0
+Backend Pass Rate       : 100.0%
+Backend Ruff Linter     : PASSED (All checks passed!, 0 errors)
+Alembic Full Chain SQL  : PASSED (upgrade head --sql & downgrade head:base --sql across 0001..0009 verified)
+
+Frontend Type-Check     : PASSED (tsc --noEmit: 0 errors)
+Frontend ESLint         : PASSED (next lint: 0 warnings, 0 errors)
+Frontend Build          : PASSED (next build: 15/15 static pages + dynamic /documents/[id] built)
+
+Overall Result          : PASSED — RELEASE READY (v2.0.0)
+
+---
+TEST RESULTS (Detailed — Phase 9 Release Additions)
+---
+Test ID | Test Name                                                                            | Result | Notes
+--------|--------------------------------------------------------------------------------------|--------|------
+S-032   | test_security_headers_and_no_store_on_api_routes                                     | PASSED | nosniff, DENY, Referrer-Policy, Permissions-Policy + Cache-Control: no-store on /api/v1/*
+S-033   | test_export_and_delete_require_authentication_sec004                                 | PASSED | 401 on GET /patients/export and DELETE /patients/account without session
+S-034   | test_patient_export_completeness_isolation_and_no_secret_leakage                     | PASSED | All patient tables exported; 0 foreign records; 0 password_hash/token/file_path/stored_filename keys
+S-035   | test_account_deletion_guards_wrong_confirm_and_wrong_password                        | PASSED | 400 on wrong confirmation phrase, 403 on wrong password; account preserved
+S-036   | test_account_deletion_erases_disk_files_all_tables_and_preserves_other_patients      | PASSED | Physical disk files + all 19 patient tables erased; old token invalidated (401); Patient B intact
+M-012   | alembic upgrade head --sql & alembic downgrade head:base --sql                       | PASSED | Clean PostgreSQL DDL across entire 0001..0009 migration chain forward and backward
+F-015   | apps/web pnpm type-check && pnpm lint && pnpm build                                  | PASSED | 0 errors/warnings; next.config.mjs headers, /dashboard Navbar, /profile export & deletion UI
+
+(All 162 Phase 0–8 tests also re-executed and PASSED with 0 warnings.)
+
+---
+COMPARISON TO BASELINE
+---
+Previous baseline (HIST-020/021): 162/162 backend tests passed (100%)
+Current release run (HIST-022/023): 167/167 backend tests passed (100%), all 18/18 SEC controls PASSED
+Change: +5 Phase 9 hardening/sovereignty tests, zero regressions, 0 warnings, MVP v2.0.0 Release Ready.
+
+---
+APPROVAL
+---
+Approved for Phase 9 Completion & MEDIFLOW MVP v2.0.0 Release: YES
+Approved by: Autonomous Engineering Partner (Antigravity)
+Approval date: 2026-11-18

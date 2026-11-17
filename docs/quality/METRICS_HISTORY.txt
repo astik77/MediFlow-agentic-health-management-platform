@@ -455,6 +455,49 @@ NOTES       : Added /dashboard (KPI strip, Recharts interactive biomarker trend
 
 --- END PHASE 8 ---
 
+--- PHASE 9: SECURITY HARDENING, DATA PORTABILITY, ACCOUNT ERASURE & RELEASE VERIFICATION ---
+
+ENTRY_ID    : HIST-022
+DATE        : 2026-11-18
+TIME        : 22:34 UTC
+PHASE       : 9
+METRIC_ID   : N/A (Full Release Backend Suite)
+METRIC_NAME : Backend Unit, API, and Full Security (SEC-001..018) Release Pass Rate
+VALUE       : 167/167 passed (100%, 0 warnings)
+DATASET_ID  : N/A (Full Phases 0–9 regression + synthetic eval datasets)
+MODEL_ID    : Ollama qwen2.5:1.5b + nomic-embed-text (hermetic local fallbacks verified)
+PROMPT_VER  : doc_summary@1.0.0, structured_extraction@1.0.0, health_qa_base@1.0.0,
+              health_assistant@1.0.0, health_summary_7d@1.0.0
+PIPELINE_VER: release-v2.0.0
+TESTER      : automated (pytest 8.4.2, ruff 0.17.5, alembic 1.20.1)
+NOTES       : Covers 162 Phase 0-8 tests + 5 Phase 9 hardening & sovereignty tests
+              (HTTP security headers + Cache-Control: no-store on /api/v1/*,
+              SEC-004 auth enforcement on /export & /account, full JSON vault
+              export completeness + zero cross-patient/secret/file_path leakage,
+              re-authenticated account deletion password & confirmation guards,
+              and physical disk + 19-table cascading erasure preserving other
+              patients). Ruff: 0 errors. Alembic base <-> head (0001..0009) SQL
+              verified both forward and backward.
+
+ENTRY_ID    : HIST-023
+DATE        : 2026-11-18
+TIME        : 22:33 UTC
+PHASE       : 9
+METRIC_ID   : N/A (Full Release Frontend Verification)
+METRIC_NAME : Frontend Type-Check, Lint & Production Build (MVP v1.0)
+VALUE       : 100% passed (0 TS errors, 0 ESLint warnings/errors, 15/15 static + /documents/[id] built)
+DATASET_ID  : N/A
+MODEL_ID    : N/A
+PROMPT_VER  : N/A
+PIPELINE_VER: release-v2.0.0
+TESTER      : automated (tsc, next lint, next build 15.3.9)
+NOTES       : Added static HTTP security headers in next.config.mjs, added shared
+              Navbar to /dashboard, updated Navbar badge to MVP v1.0, and added
+              Data Portability (JSON export) & Permanent Account Deletion UI to
+              /profile.
+
+--- END PHASE 9 (MEDIFLOW MVP v2.0.0 RELEASE READY) ---
+
 ================================================================
 PENDING BASELINE MEASUREMENTS (to be established in later phases)
 ================================================================

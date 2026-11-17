@@ -24,6 +24,7 @@ from mediflow.api.v1.routers import patients as patients_router
 from mediflow.api.v1.routers import timeline as timeline_router
 from mediflow.core.config import get_settings
 from mediflow.core.logging import configure_logging, get_logger
+from mediflow.core.middleware import SecurityHeadersMiddleware
 
 configure_logging()
 logger = get_logger(__name__)
@@ -63,6 +64,9 @@ def create_application() -> FastAPI:
     limiter = Limiter(key_func=get_remote_address)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+    # ---- Security Headers (Phase 9) ----
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # ---- CORS ----
     app.add_middleware(

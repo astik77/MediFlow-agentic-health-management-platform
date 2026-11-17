@@ -32,6 +32,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/features/auth/AuthContext";
 import { analyticsApi } from "@/lib/api";
 import type {
@@ -233,8 +234,11 @@ export default function DashboardPage() {
 
   if (authLoading || !authenticated) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-[#2457A6]" />
+      <div className="min-h-screen bg-[#F7F9FC] flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#2457A6]" />
+        </div>
       </div>
     );
   }
@@ -245,7 +249,9 @@ export default function DashboardPage() {
   const summaryHistory = summariesQuery.data?.items ?? [];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+    <div className="min-h-screen bg-[#F7F9FC] flex flex-col">
+      <Navbar />
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -904,6 +910,7 @@ export default function DashboardPage() {
           </div>
         )}
       </section>
+      </main>
     </div>
   );
 }

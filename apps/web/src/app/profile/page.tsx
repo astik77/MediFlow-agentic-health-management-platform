@@ -16,6 +16,8 @@ import {
   Save,
   Cpu,
   Lock,
+  Download,
+  Trash2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -43,6 +45,11 @@ export default function ProfilePage() {
     message: string;
   } | null>(null);
   const [revoking, setRevoking] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [showDeleteForm, setShowDeleteForm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !authenticated) {
@@ -143,6 +150,63 @@ export default function ProfilePage() {
           err instanceof ApiError ? err.detail : "Failed to revoke sessions.",
       });
       setRevoking(false);
+    }
+  };
+
+  const handleExportVault = async () => {
+    setExporting(true);
+    setFeedback(null);
+    try {
+      const bundle = await patientApi.exportData();
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      const today = new Date().toISOString().slice(0, 10);
+      anchor.href = url;
+      anchor.download = `mediflow-health-export-${today}.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setFeedback({
+        type: "success",
+        message: "Health vault exported successfully as JSON.",
+      });
+    } catch (err) {
+      setFeedback({
+        type: "error",
+        message:
+          err instanceof ApiError
+            ? err.detail
+            : "Failed to export health vault.",
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDeleting(true);
+    setFeedback(null);
+    try {
+      await patientApi.deleteAccount({
+        password: deletePassword,
+        confirm_text: deleteConfirmText,
+      });
+      await logout();
+      router.replace("/register");
+    } catch (err) {
+      setFeedback({
+        type: "error",
+        message:
+          err instanceof ApiError
+            ? err.detail
+            : "Failed to delete account. Check your password and confirmation phrase.",
+      });
+      setDeleting(false);
     }
   };
 
@@ -536,6 +600,138 @@ export default function ProfilePage() {
             </div>
           </section>
         )}
+
+        {/* Data Portability & Right to Erasure (Phase 9) */}
+        <section className="bg-white rounded-xl border border-[#E4E7EC] p-6 shadow-sm space-y-4">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-[#2457A6]" />
+            <h2 className="text-base font-bold text-[#172033]">
+              Data Portability &amp; Account Erasure
+            </h2>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-[#F7F9FC] border border-[#E4E7EC]">
+            <div>
+              <h3 className="text-sm font-semibold text-[#172033]">
+                Export My Health Vault (JSON)
+              </h3>
+              <p className="text-xs text-[#667085] mt-0.5">
+                Download a complete, portable JSON copy of your profile,
+                conditions, allergies, symptoms, observations, timeline,
+                documents metadata, conversations, and 7-day summaries.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleExportVault}
+              disabled={exporting}
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#2457A6] hover:bg-[#1D4688] disabled:opacity-60 text-white text-xs font-medium shrink-0"
+            >
+              {exporting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              Export JSON
+            </button>
+          </div>
+
+          <div className="p-4 rounded-lg bg-red-50/50 border border-red-200 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-[#B42318]">
+                  Permanently Delete Account
+                </h3>
+                <p className="text-xs text-[#667085] mt-0.5">
+                  Permanently removes your account, all medical records,
+                  uploaded document files on disk, vector embeddings, and
+                  conversations. This action cannot be undone.
+                </p>
+              </div>
+              {!showDeleteForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteForm(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg border border-red-300 bg-white hover:bg-red-50 text-[#B42318] text-xs font-medium shrink-0"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete Account
+                </button>
+              )}
+            </div>
+
+            {showDeleteForm && (
+              <form
+                onSubmit={handleDeleteAccount}
+                className="pt-3 border-t border-red-200/80 space-y-3"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label
+                      htmlFor="delete-password"
+                      className="block text-xs font-medium text-[#172033] mb-1"
+                    >
+                      Current Password
+                    </label>
+                    <input
+                      id="delete-password"
+                      type="password"
+                      required
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      placeholder="Enter your password"
+                      className="w-full rounded-lg border border-[#D0D5DD] bg-white px-3 py-2 text-xs text-[#172033]"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="delete-confirm"
+                      className="block text-xs font-medium text-[#172033] mb-1"
+                    >
+                      Type <code className="font-mono">DELETE MY ACCOUNT</code>
+                    </label>
+                    <input
+                      id="delete-confirm"
+                      type="text"
+                      required
+                      value={deleteConfirmText}
+                      onChange={(e) => setDeleteConfirmText(e.target.value)}
+                      placeholder="DELETE MY ACCOUNT"
+                      className="w-full rounded-lg border border-[#D0D5DD] bg-white px-3 py-2 text-xs text-[#172033]"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={
+                      deleting || deleteConfirmText.trim() !== "DELETE MY ACCOUNT"
+                    }
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#B42318] hover:bg-red-800 disabled:opacity-50 text-white text-xs font-medium"
+                  >
+                    {deleting ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                    Confirm Permanent Deletion
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDeleteForm(false);
+                      setDeletePassword("");
+                      setDeleteConfirmText("");
+                    }}
+                    className="px-3 py-2 rounded-lg border border-[#E4E7EC] bg-white text-xs font-medium text-[#667085] hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );

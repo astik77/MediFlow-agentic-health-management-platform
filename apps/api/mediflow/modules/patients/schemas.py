@@ -62,3 +62,41 @@ class PatientOnboardingRequest(BaseModel):
     emergency_contact: EmergencyContactSchema | None = None
     existing_conditions: list[str] | None = Field(default_factory=list)
     known_allergies: list[str] | None = Field(default_factory=list)
+
+
+class PatientExportResponse(BaseModel):
+    """
+    Portable longitudinal health vault JSON bundle (Phase 9).
+    Explicitly excludes password hashes, session tokens, and server file paths.
+    """
+
+    export_version: str = "1.0.0"
+    exported_at: datetime
+    account_email: str
+    profile: PatientProfileResponse
+    counts: dict[str, int]
+    conditions: list[dict[str, Any]]
+    allergies: list[dict[str, Any]]
+    symptoms: list[dict[str, Any]]
+    observations: list[dict[str, Any]]
+    timeline_events: list[dict[str, Any]]
+    record_revisions: list[dict[str, Any]]
+    documents: list[dict[str, Any]]
+    conversations: list[dict[str, Any]]
+    health_summaries: list[dict[str, Any]]
+
+
+class AccountDeletionRequest(BaseModel):
+    """Re-authenticated confirmation payload required to erase a patient account."""
+
+    password: str = Field(..., min_length=1, max_length=256)
+    confirm_text: str = Field(..., min_length=1, max_length=64)
+
+
+class AccountDeletionResponse(BaseModel):
+    """Anonymized receipt returned after verified cascading account erasure."""
+
+    deleted: bool = True
+    deleted_at: datetime
+    files_removed: int
+    message: str

@@ -165,6 +165,25 @@ export const patientApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  exportData: (): Promise<Record<string, unknown>> =>
+    apiRequest<Record<string, unknown>>("/api/v1/patients/export", {
+      method: "GET",
+    }),
+
+  deleteAccount: (payload: {
+    password: string;
+    confirm_text: string;
+  }): Promise<{
+    deleted: boolean;
+    deleted_at: string;
+    files_removed: number;
+    message: string;
+  }> =>
+    apiRequest("/api/v1/patients/account", {
+      method: "DELETE",
+      body: JSON.stringify(payload),
+    }),
 };
 
 export const healthRecordsApi = {

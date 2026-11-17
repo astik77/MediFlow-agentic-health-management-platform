@@ -353,3 +353,18 @@ Generates and persists a longitudinal health summary (`health_summaries`) coveri
 Lists the authenticated patient's persisted historical health summaries ordered by `created_at DESC`.
 - **Query Parameters:** `limit` (`1–100`, default `20`)
 - **200 OK:** `HealthSummaryListResponse`
+
+---
+
+## 12. Data Portability, Account Erasure & Security Headers (Phase 9)
+
+Every API response includes defense-in-depth HTTP security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`). All `/api/v1/*` routes additionally enforce `Cache-Control: no-store` and `Pragma: no-cache` so private medical data is never cached by browsers or proxies.
+
+### `GET /api/v1/patients/export`
+Exports the authenticated patient's complete longitudinal health vault as a portable JSON bundle (`profile`, `conditions`, `allergies`, `symptoms`, `observations`, `timeline_events`, `record_revisions`, `documents` metadata, `conversations` + `messages`, `health_summaries`, and `counts`). Strictly omits `password_hash`, `session_token_hash`, `file_path`, and `stored_filename` (`SEC-009`, `SEC-015`).
+- **200 OK:** `PatientExportResponse` (`401 Unauthorized` if unauthenticated)
+
+### `DELETE /api/v1/patients/account`
+Permanently erases the authenticated patient's account (`SEC-016`): requires current Argon2id `password` and exact `confirm_text: "DELETE MY ACCOUNT"`. Safely deletes all physical uploaded files on disk within `upload_dir`, wipes all rows belonging to the patient across all 19 relational tables, and clears the `HttpOnly` session cookie without affecting any other patient.
+- **Request Body:** `{ "password": "<current_password>", "confirm_text": "DELETE MY ACCOUNT" }`
+- **200 OK:** `AccountDeletionResponse` (`400 Bad Request` on confirmation mismatch, `403 Forbidden` on wrong password, `401 Unauthorized` if unauthenticated)
