@@ -20,7 +20,10 @@ param(
     [string]$HealthBaseUrl = "http://localhost"
 )
 
-$ErrorActionPreference = "Stop"
+# Use Continue so docker compose / git informational stderr output does not
+# trigger terminating NativeCommandError in Windows PowerShell 5.1; we check
+# $LASTEXITCODE explicitly after every native command.
+$ErrorActionPreference = "Continue"
 
 function Write-Step {
     param([string]$Message)
