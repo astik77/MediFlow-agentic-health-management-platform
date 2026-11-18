@@ -1,0 +1,35 @@
+# ============================================================
+# MEDIFLOW — Self-Hosted Reverse Proxy (Caddy 2)
+#
+# - Default MEDIFLOW_SITE_ADDRESS=:80 serves HTTP on localhost/LAN/Tailscale.
+# - Set MEDIFLOW_SITE_ADDRESS=health.yourdomain.com in .env.prod to enable
+#   automatic Let's Encrypt HTTPS TLS provisioning & HTTP->HTTPS redirects.
+# ============================================================
+
+{$MEDIFLOW_SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# Guard upload sizes at edge (matches MEDIFLOW's 50 MB document upload cap)
+	request_body {
+		max_size 55MB
+	}
+
+	# Same-origin routing to FastAPI backend (keeps HttpOnly SameSite=lax cookies seamless)
+	handle /api/* {
+		reverse_proxy api:8000 {
+			transport http {
+				read_timeout 180s
+				write_timeout 180s
+			}
+		}
+	}
+
+	handle /health {
+		reverse_proxy api:8000
+	}
+
+	# All frontend pages & assets -> Next.js standalone server
+	handle {
+		reverse_proxy web:3000
+	}
+}
