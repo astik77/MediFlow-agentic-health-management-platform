@@ -68,7 +68,7 @@ class Settings(BaseSettings):
     document_chunk_overlap_chars: int = 150
 
     # ---- AI Providers ----
-    ai_default_provider: Literal["ollama", "mock"] = "ollama"
+    ai_default_provider: Literal["ollama", "mock", "gemini", "grok"] = "ollama"
     ai_structured_max_retries: int = 1
     ai_health_check_timeout_seconds: float = 0.5
     ollama_base_url: str = "http://localhost:11434"
@@ -79,7 +79,7 @@ class Settings(BaseSettings):
 
     gemini_enabled: bool = False
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.0-flash-exp"
+    gemini_model: str = "gemini-3.1-flash-lite"
 
     grok_enabled: bool = False
     grok_api_key: str = ""

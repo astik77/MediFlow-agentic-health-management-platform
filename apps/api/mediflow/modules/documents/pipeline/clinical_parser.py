@@ -254,21 +254,77 @@ _RANGE_BOUNDS_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:-|\u2013|to)\s*(\d+(?:\.\d+
 _RANGE_LT_RE = re.compile(r"<\s*=?\s*(\d+(?:\.\d+)?)")
 _RANGE_GT_RE = re.compile(r">\s*=?\s*(\d+(?:\.\d+)?)")
 
+# Standard clinical reference ranges for common biomarkers when missing from document OCR
+DEFAULT_BIOMARKER_RANGES: dict[str, tuple[float, float, str]] = {
+    "hemoglobin": (12.0, 17.5, "g/dL"),
+    "fasting blood sugar": (70.0, 100.0, "mg/dL"),
+    "blood sugar": (70.0, 100.0, "mg/dL"),
+    "glucose": (70.0, 100.0, "mg/dL"),
+    "random blood sugar": (70.0, 140.0, "mg/dL"),
+    "postprandial blood sugar": (70.0, 140.0, "mg/dL"),
+    "hba1c": (4.0, 5.7, "%"),
+    "platelets": (150000.0, 450000.0, "/uL"),
+    "platelet count": (150000.0, 450000.0, "/uL"),
+    "wbc": (4000.0, 11000.0, "/uL"),
+    "total leucocyte count": (4000.0, 11000.0, "/uL"),
+    "white blood cells": (4000.0, 11000.0, "/uL"),
+    "rbc": (4.0, 6.0, "mill/cumm"),
+    "red blood cell count": (4.0, 6.0, "mill/cumm"),
+    "creatinine": (0.6, 1.2, "mg/dL"),
+    "serum creatinine": (0.6, 1.2, "mg/dL"),
+    "blood urea": (15.0, 40.0, "mg/dL"),
+    "urea": (15.0, 40.0, "mg/dL"),
+    "bun": (7.0, 20.0, "mg/dL"),
+    "total cholesterol": (100.0, 200.0, "mg/dL"),
+    "cholesterol": (100.0, 200.0, "mg/dL"),
+    "triglycerides": (50.0, 150.0, "mg/dL"),
+    "hdl": (40.0, 60.0, "mg/dL"),
+    "hdl cholesterol": (40.0, 60.0, "mg/dL"),
+    "ldl": (70.0, 100.0, "mg/dL"),
+    "ldl cholesterol": (70.0, 100.0, "mg/dL"),
+    "vldl": (10.0, 30.0, "mg/dL"),
+    "total bilirubin": (0.2, 1.2, "mg/dL"),
+    "bilirubin": (0.2, 1.2, "mg/dL"),
+    "direct bilirubin": (0.0, 0.3, "mg/dL"),
+    "sgot": (10.0, 40.0, "U/L"),
+    "ast": (10.0, 40.0, "U/L"),
+    "sgpt": (7.0, 56.0, "U/L"),
+    "alt": (7.0, 56.0, "U/L"),
+    "alkaline phosphatase": (44.0, 147.0, "U/L"),
+    "tsh": (0.4, 4.5, "uIU/mL"),
+    "t3": (0.8, 2.0, "ng/mL"),
+    "t4": (5.0, 12.0, "ug/dL"),
+    "systolic blood pressure": (90.0, 120.0, "mmHg"),
+    "diastolic blood pressure": (60.0, 80.0, "mmHg"),
+    "heart rate": (60.0, 100.0, "bpm"),
+    "pulse": (60.0, 100.0, "bpm"),
+    "spo2": (95.0, 100.0, "%"),
+    "oxygen saturation": (95.0, 100.0, "%"),
+    "calcium": (8.5, 10.5, "mg/dL"),
+    "potassium": (3.5, 5.0, "mmol/L"),
+    "sodium": (135.0, 145.0, "mmol/L"),
+    "uric acid": (3.5, 7.2, "mg/dL"),
+}
+
 
 def evaluate_abnormality(
     value_numeric: float | None,
     reference_range_text: str | None,
     explicit_flag: str | None = None,
 ) -> str | None:
-    """Determine abnormality flag (normal, low, high, critical) from explicit flag or range."""
+    """Determine abnormality flag (normal, low, high, critically_low, critically_high) from explicit flag or range."""
     if explicit_flag:
         fl = explicit_flag.strip().upper()
+        if fl in {"LL", "PANIC LOW", "CRITICAL LOW", "CRITICALLY LOW"}:
+            return "critically_low"
+        if fl in {"HH", "PANIC HIGH", "CRITICAL HIGH", "CRITICALLY HIGH"}:
+            return "critically_high"
+        if fl in {"CRIT", "CRITICAL", "PANIC"}:
+            return "critical"
         if fl in {"H", "HIGH"}:
             return "high"
         if fl in {"L", "LOW"}:
             return "low"
-        if fl in {"HH", "LL", "CRIT", "CRITICAL", "PANIC"}:
-            return "critical"
         if fl in {"N", "NORMAL"}:
             return "normal"
 
@@ -278,20 +334,29 @@ def evaluate_abnormality(
     m = _RANGE_BOUNDS_RE.search(reference_range_text)
     if m:
         low, high = float(m.group(1)), float(m.group(2))
+        spread = high - low
         if value_numeric < low:
+            if (spread > 0 and value_numeric <= low - 0.40 * spread) or (low > 0 and value_numeric <= 0.70 * low):
+                return "critically_low"
             return "low"
         if value_numeric > high:
+            if (spread > 0 and value_numeric >= high + 0.40 * spread) or (high > 0 and value_numeric >= 1.40 * high):
+                return "critically_high"
             return "high"
         return "normal"
 
     m = _RANGE_LT_RE.search(reference_range_text)
     if m:
         upper = float(m.group(1))
+        if value_numeric > 1.40 * upper:
+            return "critically_high"
         return "high" if value_numeric > upper else "normal"
 
     m = _RANGE_GT_RE.search(reference_range_text)
     if m:
         lower = float(m.group(1))
+        if value_numeric < 0.70 * lower:
+            return "critically_low"
         return "low" if value_numeric < lower else "normal"
 
     return None
@@ -495,6 +560,17 @@ def parse_candidate_observations(
 
             val_num = _try_parse_numeric(val_raw)
             val_norm, unit_norm = normalize_unit_and_value(name, val_num, unit_raw)
+
+            # If reference range is missing from OCR, look up standard clinical reference interval
+            if not ref_range:
+                low_name = name.lower().strip()
+                for key, (d_low, d_high, d_unit) in DEFAULT_BIOMARKER_RANGES.items():
+                    if key in low_name or low_name in key:
+                        ref_range = f"{d_low} - {d_high} {d_unit}"
+                        if not unit_raw:
+                            unit_raw = d_unit
+                        break
+
             abn = evaluate_abnormality(val_num, ref_range, explicit_flag)
 
             # Confidence boost when unit + reference range both matched cleanly

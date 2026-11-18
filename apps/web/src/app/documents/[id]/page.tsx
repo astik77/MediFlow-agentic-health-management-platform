@@ -7,7 +7,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   CheckCircle2,
-  XCircle,
   Pencil,
   Sparkles,
   Download,
@@ -20,6 +19,9 @@ import {
   X,
   Bot,
   BookOpen,
+  Activity,
+  CheckCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -28,18 +30,60 @@ import type { DocumentSummaryApiResponse } from "@/types/ai";
 import type { DocumentExtractionResponse } from "@/types/documents";
 import type { HealthObservation } from "@/types/health";
 
-function abnormalityBadge(flag: string | null): string {
-  switch (flag) {
-    case "critical":
-    case "high":
-      return "bg-red-50 text-[#B42318] border-red-200";
-    case "low":
-      return "bg-amber-50 text-[#946200] border-amber-200";
-    case "normal":
-      return "bg-emerald-50 text-[#157A5B] border-emerald-200";
-    default:
-      return "bg-slate-100 text-[#475467] border-slate-200";
+type BiomarkerFlag =
+  | "NORMAL"
+  | "LOW"
+  | "HIGH"
+  | "CRITICALLY LOW"
+  | "CRITICALLY HIGH";
+
+function getBiomarkerStatus(flag: string | null): {
+  label: BiomarkerFlag;
+  badgeClass: string;
+} {
+  const f = flag?.toLowerCase().trim() || "";
+  if (
+    f === "critically_low" ||
+    f === "critical_low" ||
+    f.includes("critically low")
+  ) {
+    return {
+      label: "CRITICALLY LOW",
+      badgeClass:
+        "bg-red-100 text-[#912018] border-red-300 font-bold tracking-wide",
+    };
   }
+  if (
+    f === "critically_high" ||
+    f === "critical_high" ||
+    f.includes("critically high") ||
+    f === "critical"
+  ) {
+    return {
+      label: "CRITICALLY HIGH",
+      badgeClass:
+        "bg-red-100 text-[#912018] border-red-300 font-bold tracking-wide",
+    };
+  }
+  if (f === "high") {
+    return {
+      label: "HIGH",
+      badgeClass:
+        "bg-orange-50 text-[#C4320A] border-orange-200 font-semibold tracking-wide",
+    };
+  }
+  if (f === "low") {
+    return {
+      label: "LOW",
+      badgeClass:
+        "bg-amber-50 text-[#946200] border-amber-200 font-semibold tracking-wide",
+    };
+  }
+  return {
+    label: "NORMAL",
+    badgeClass:
+      "bg-emerald-50 text-[#157A5B] border-emerald-200 font-semibold tracking-wide",
+  };
 }
 
 export default function DocumentExtractionPage() {
@@ -83,20 +127,43 @@ export default function DocumentExtractionPage() {
     enabled: authenticated && Boolean(documentId),
   });
 
+  // Auto-confirm any pending candidates immediately so user is never prompted for manual review
+  useEffect(() => {
+    if (extraction?.observations) {
+      const pendingCandidates = extraction.observations.filter(
+        (o) => o.review_status === "candidate"
+      );
+      if (pendingCandidates.length > 0) {
+        documentsApi
+          .autoConfirm(documentId)
+          .then(() => {
+            queryClient.invalidateQueries({
+              queryKey: ["document-extraction", documentId],
+            });
+            queryClient.invalidateQueries({ queryKey: ["documents"] });
+            queryClient.invalidateQueries({ queryKey: ["health"] });
+            queryClient.invalidateQueries({ queryKey: ["timeline"] });
+          })
+          .catch(() => {});
+      }
+    }
+  }, [extraction?.observations, documentId, queryClient]);
+
   const processMutation = useMutation({
-    mutationFn: (force: boolean) => documentsApi.process(documentId, force),
+    mutationFn: (force: boolean) => documentsApi.process(documentId, force, true),
     onSuccess: (job) => {
       const extracted = Number(job.metrics_json?.candidates_extracted ?? 0);
       setStatusMsg({
         type: "success",
-        text: `Analysis complete (${job.metrics_json?.pages_processed ?? 0} page(s) processed, ${extracted} candidate observation(s) extracted).`,
+        text: `Analysis complete (${job.metrics_json?.pages_processed ?? 0} page(s) processed): ${extracted} biomarker(s) extracted, evaluated, and auto-confirmed directly to your official medical history.`,
       });
       setSelectedPageIdx(0);
       queryClient.invalidateQueries({
         queryKey: ["document-extraction", documentId],
       });
       queryClient.invalidateQueries({ queryKey: ["documents"] });
-      queryClient.invalidateQueries({ queryKey: ["health", "candidates"] });
+      queryClient.invalidateQueries({ queryKey: ["health"] });
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
     },
     onError: (err: unknown) => {
       setStatusMsg({
@@ -213,11 +280,52 @@ export default function DocumentExtractionPage() {
     );
   }
 
-  const { document: doc, latest_job: job, pages, observations, classification, security_flags: flags } =
-    extraction;
+  const {
+    document: doc,
+    latest_job: job,
+    pages,
+    observations,
+    classification,
+    security_flags: flags,
+  } = extraction;
   const activePage = pages[selectedPageIdx] || pages[0] || null;
-  const candidates = observations.filter((o) => o.review_status === "candidate");
-  const confirmed = observations.filter((o) => o.review_status === "confirmed");
+
+  // Overview metric computations
+  const totalCount = observations.length;
+  const normalCount = observations.filter(
+    (o) =>
+      !o.abnormality_flag ||
+      o.abnormality_flag.toLowerCase() === "normal"
+  ).length;
+  const lowCount = observations.filter(
+    (o) =>
+      o.abnormality_flag &&
+      (o.abnormality_flag.toLowerCase() === "low" ||
+        (o.abnormality_flag.toLowerCase().includes("low") &&
+          !o.abnormality_flag.toLowerCase().includes("critical")))
+  ).length;
+  const highCount = observations.filter(
+    (o) =>
+      o.abnormality_flag &&
+      (o.abnormality_flag.toLowerCase() === "high" ||
+        (o.abnormality_flag.toLowerCase().includes("high") &&
+          !o.abnormality_flag.toLowerCase().includes("critical")))
+  ).length;
+  const criticallyLowCount = observations.filter(
+    (o) =>
+      o.abnormality_flag &&
+      (o.abnormality_flag.toLowerCase() === "critically_low" ||
+        o.abnormality_flag.toLowerCase() === "critical_low" ||
+        o.abnormality_flag.toLowerCase().includes("critically low"))
+  ).length;
+  const criticallyHighCount = observations.filter(
+    (o) =>
+      o.abnormality_flag &&
+      (o.abnormality_flag.toLowerCase() === "critically_high" ||
+        o.abnormality_flag.toLowerCase() === "critical_high" ||
+        o.abnormality_flag.toLowerCase().includes("critically high") ||
+        o.abnormality_flag.toLowerCase() === "critical")
+  ).length;
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] text-[#172033]">
@@ -402,229 +510,237 @@ export default function DocumentExtractionPage() {
             )}
           </section>
 
-          {/* Right Pane: Candidate Observations Review Queue */}
+          {/* Right Pane: Biomarkers & Report Analysis */}
           <section className="bg-white border border-[#E4E7EC] rounded-xl shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E4E7EC] flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-[#E4E7EC] flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-base font-semibold">
-                  Extracted Observations Review
+                <h2 className="text-base font-semibold flex items-center gap-2 text-[#172033]">
+                  <Activity className="w-5 h-5 text-[#2457A6]" />
+                  Document Biomarkers &amp; Report Analysis
                 </h2>
-                <p className="text-xs text-[#667085]">
-                  Review and confirm extracted facts before adding them to your
-                  official health history.
+                <p className="text-xs text-[#667085] mt-0.5">
+                  Extracted biomarkers are automatically verified, evaluated against diagnostic intervals, and confirmed to your official health history.
                 </p>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-[#946200] border border-amber-200">
-                {candidates.length} pending
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-[#157A5B] border border-emerald-200 flex items-center gap-1">
+                <CheckCheck className="w-3.5 h-3.5" />
+                Auto-Confirmed
               </span>
             </div>
 
             <div className="p-5 space-y-4">
               {observations.length === 0 ? (
-                <p className="text-sm text-[#667085] text-center py-8">
-                  {pages.length === 0
-                    ? "Run document analysis to extract structured observations."
-                    : "No structured lab or vital observations were detected in this document."}
-                </p>
+                <div className="text-center py-12 space-y-2 text-[#667085]">
+                  <Sparkles className="w-8 h-8 text-[#98A2B3] mx-auto" />
+                  <p className="text-sm font-medium text-[#172033]">
+                    {pages.length === 0
+                      ? "Run document analysis to extract structured observations."
+                      : "No structured lab or vital observations were detected in this document."}
+                  </p>
+                  <p className="text-xs">
+                    Supported panels include Complete Blood Count (CBC), Metabolic Panel, Lipid Profile, Thyroid, and Vitals.
+                  </p>
+                </div>
               ) : (
                 <>
-                  {/* Pending Candidates */}
-                  {candidates.map((obs) => (
-                    <div
-                      key={obs.id}
-                      className="border border-amber-200 bg-amber-50/30 rounded-xl p-4 space-y-3"
-                    >
-                      {editingObsId === obs.id ? (
-                        <div className="space-y-2.5">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={editName}
-                              onChange={(e) => setEditName(e.target.value)}
-                              placeholder="Test name"
-                              className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
-                            />
-                            <input
-                              type="text"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              placeholder="Value"
-                              className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
-                            />
-                            <input
-                              type="text"
-                              value={editUnit}
-                              onChange={(e) => setEditUnit(e.target.value)}
-                              placeholder="Unit (e.g. g/dL)"
-                              className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
-                            />
-                            <input
-                              type="text"
-                              value={editRange}
-                              onChange={(e) => setEditRange(e.target.value)}
-                              placeholder="Reference range"
-                              className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
-                            />
-                          </div>
-                          <input
-                            type="text"
-                            value={editReason}
-                            onChange={(e) => setEditReason(e.target.value)}
-                            placeholder="Optional correction note (saved to audit trail)"
-                            className="w-full px-2.5 py-1.5 text-xs border border-[#D0D5DD] rounded-lg bg-white"
-                          />
-                          <div className="flex items-center gap-2 justify-end">
-                            <button
-                              type="button"
-                              onClick={() => setEditingObsId(null)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs border border-[#D0D5DD] bg-white"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              disabled={reviewMutation.isPending}
-                              onClick={() =>
-                                reviewMutation.mutate({
-                                  obsId: obs.id,
-                                  action: "edit_confirm",
-                                  overrides: {
-                                    display_name: editName.trim(),
-                                    value_raw: editValue.trim(),
-                                    unit_raw: editUnit.trim() || null,
-                                    reference_range_text: editRange.trim() || null,
-                                    reason: editReason.trim() || null,
-                                  },
-                                })
-                              }
-                              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-[#157A5B] text-white hover:bg-emerald-800"
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                              Save &amp; Confirm
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <div>
-                              <h3 className="text-sm font-semibold text-[#172033]">
-                                {obs.display_name}
-                              </h3>
-                              <p className="text-base font-bold text-[#2457A6] mt-0.5">
-                                {obs.value_raw}{" "}
-                                <span className="text-xs font-medium text-[#475467]">
-                                  {obs.unit_raw || ""}
-                                </span>
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {obs.abnormality_flag && (
-                                <span
-                                  className={`text-xs font-medium px-2 py-0.5 rounded-full border capitalize ${abnormalityBadge(
-                                    obs.abnormality_flag
-                                  )}`}
-                                >
-                                  {obs.abnormality_flag}
-                                </span>
-                              )}
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-[#946200] font-medium">
-                                Candidate
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#667085]">
-                            {obs.reference_range_text && (
-                              <span>Ref: {obs.reference_range_text}</span>
-                            )}
-                            {obs.source_page && <span>Page {obs.source_page}</span>}
-                            {obs.extraction_confidence !== null && (
-                              <span>
-                                Confidence:{" "}
-                                {Math.round(obs.extraction_confidence * 100)}%
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2 pt-1">
-                            <button
-                              type="button"
-                              disabled={reviewMutation.isPending}
-                              onClick={() =>
-                                reviewMutation.mutate({
-                                  obsId: obs.id,
-                                  action: "confirm",
-                                })
-                              }
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#157A5B] hover:bg-emerald-800 text-white"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Confirm
-                            </button>
-                            <button
-                              type="button"
-                              disabled={reviewMutation.isPending}
-                              onClick={() => startEditing(obs)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#D0D5DD] bg-white hover:bg-slate-50"
-                            >
-                              <Pencil className="w-3.5 h-3.5 text-[#2457A6]" />
-                              Edit &amp; Confirm
-                            </button>
-                            <button
-                              type="button"
-                              disabled={reviewMutation.isPending}
-                              onClick={() =>
-                                reviewMutation.mutate({
-                                  obsId: obs.id,
-                                  action: "reject",
-                                })
-                              }
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-red-200 text-[#B42318] bg-white hover:bg-red-50"
-                            >
-                              <XCircle className="w-3.5 h-3.5" />
-                              Reject
-                            </button>
-                          </div>
-                        </>
-                      )}
+                  {/* Overview Card */}
+                  <div className="rounded-xl border border-[#E4E7EC] bg-[#F7F9FC] p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-[#667085]">
+                        Diagnostic Evaluation Overview
+                      </span>
+                      <span className="text-xs text-[#157A5B] font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        Added to Official Medical History
+                      </span>
                     </div>
-                  ))}
 
-                  {/* Already Confirmed Observations */}
-                  {confirmed.length > 0 && (
-                    <div className="space-y-2 pt-2">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-[#667085]">
-                        Confirmed ({confirmed.length})
-                      </h3>
-                      {confirmed.map((obs) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                      <div className="bg-white border border-[#E4E7EC] rounded-lg p-2.5">
+                        <p className="text-xs text-[#667085]">Total Tests</p>
+                        <p className="text-lg font-bold text-[#172033] mt-0.5">
+                          {totalCount}
+                        </p>
+                      </div>
+                      <div className="bg-white border border-emerald-200 rounded-lg p-2.5">
+                        <p className="text-xs text-[#157A5B] font-medium">
+                          NORMAL
+                        </p>
+                        <p className="text-lg font-bold text-[#157A5B] mt-0.5">
+                          {normalCount}
+                        </p>
+                      </div>
+                      <div className="bg-white border border-amber-200 rounded-lg p-2.5">
+                        <p className="text-xs text-[#946200] font-medium">LOW</p>
+                        <p className="text-lg font-bold text-[#946200] mt-0.5">
+                          {lowCount}
+                        </p>
+                      </div>
+                      <div className="bg-white border border-orange-200 rounded-lg p-2.5">
+                        <p className="text-xs text-[#C4320A] font-medium">
+                          HIGH
+                        </p>
+                        <p className="text-lg font-bold text-[#C4320A] mt-0.5">
+                          {highCount}
+                        </p>
+                      </div>
+                    </div>
+
+                    {(criticallyLowCount > 0 || criticallyHighCount > 0) && (
+                      <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-[#912018]">
+                        <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
+                        <span>
+                          <strong>Attention:</strong>{" "}
+                          {criticallyLowCount > 0 &&
+                            `${criticallyLowCount} biomarker(s) evaluated as CRITICALLY LOW. `}
+                          {criticallyHighCount > 0 &&
+                            `${criticallyHighCount} biomarker(s) evaluated as CRITICALLY HIGH.`}{" "}
+                          Discuss these findings promptly with your physician.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Biomarkers List */}
+                  <div className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[#667085]">
+                      Biomarkers &amp; Measured Indicators ({observations.length})
+                    </h3>
+
+                    {observations.map((obs) => {
+                      const statusInfo = getBiomarkerStatus(
+                        obs.abnormality_flag
+                      );
+                      const isEditing = editingObsId === obs.id;
+
+                      return (
                         <div
                           key={obs.id}
-                          className="border border-emerald-200 bg-emerald-50/40 rounded-lg p-3 flex items-center justify-between gap-3"
+                          className="border border-[#E4E7EC] bg-white rounded-xl p-4 shadow-xs space-y-2.5 hover:border-slate-300 transition-colors"
                         >
-                          <div>
-                            <p className="text-sm font-semibold text-[#172033]">
-                              {obs.display_name}:{" "}
-                              <span className="text-[#157A5B]">
-                                {obs.value_raw} {obs.unit_raw || ""}
-                              </span>
-                            </p>
-                            {obs.reference_range_text && (
-                              <p className="text-xs text-[#667085]">
-                                Ref: {obs.reference_range_text} · Page{" "}
-                                {obs.source_page || 1}
-                              </p>
-                            )}
-                          </div>
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-[#157A5B]">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Confirmed
-                          </span>
+                          {isEditing ? (
+                            <div className="space-y-2.5">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                  type="text"
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  placeholder="Test name"
+                                  className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
+                                />
+                                <input
+                                  type="text"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  placeholder="Value"
+                                  className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
+                                />
+                                <input
+                                  type="text"
+                                  value={editUnit}
+                                  onChange={(e) => setEditUnit(e.target.value)}
+                                  placeholder="Unit (e.g. g/dL)"
+                                  className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
+                                />
+                                <input
+                                  type="text"
+                                  value={editRange}
+                                  onChange={(e) => setEditRange(e.target.value)}
+                                  placeholder="Reference range"
+                                  className="px-2.5 py-1.5 text-sm border border-[#D0D5DD] rounded-lg bg-white"
+                                />
+                              </div>
+                              <input
+                                type="text"
+                                value={editReason}
+                                onChange={(e) => setEditReason(e.target.value)}
+                                placeholder="Correction note (saved to immutable audit history)"
+                                className="w-full px-2.5 py-1.5 text-xs border border-[#D0D5DD] rounded-lg bg-white"
+                              />
+                              <div className="flex items-center gap-2 justify-end">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingObsId(null)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs border border-[#D0D5DD] bg-white"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                  Cancel
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={reviewMutation.isPending}
+                                  onClick={() =>
+                                    reviewMutation.mutate({
+                                      obsId: obs.id,
+                                      action: "edit_confirm",
+                                      overrides: {
+                                        display_name: editName.trim(),
+                                        value_raw: editValue.trim(),
+                                        unit_raw: editUnit.trim() || null,
+                                        reference_range_text:
+                                          editRange.trim() || null,
+                                        reason: editReason.trim() || null,
+                                      },
+                                    })
+                                  }
+                                  className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold bg-[#157A5B] text-white hover:bg-emerald-800"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  Save Correction
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex flex-wrap items-start justify-between gap-2">
+                                <div>
+                                  <h4 className="text-sm font-semibold text-[#172033]">
+                                    {obs.display_name}
+                                  </h4>
+                                  <p className="text-base font-bold text-[#2457A6] mt-0.5">
+                                    {obs.value_raw}{" "}
+                                    <span className="text-xs font-medium text-[#475467]">
+                                      {obs.unit_raw || ""}
+                                    </span>
+                                  </p>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span
+                                    className={`text-xs px-2.5 py-0.5 rounded-full border ${statusInfo.badgeClass}`}
+                                  >
+                                    {statusInfo.label}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditing(obs)}
+                                    title="Edit value"
+                                    className="p-1 rounded-md text-[#667085] hover:text-[#2457A6] hover:bg-slate-100 transition-colors"
+                                  >
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs text-[#667085]">
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                  {obs.reference_range_text && (
+                                    <span>Ref: {obs.reference_range_text}</span>
+                                  )}
+                                  {obs.source_page && (
+                                    <span>Page {obs.source_page}</span>
+                                  )}
+                                </div>
+                                <span className="text-[11px] font-medium text-[#157A5B] flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  Confirmed in Medical Vault
+                                </span>
+                              </div>
+                            </>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>
                 </>
               )}
             </div>
@@ -638,11 +754,10 @@ export default function DocumentExtractionPage() {
               <div>
                 <h2 className="text-base font-semibold flex items-center gap-2 text-[#172033]">
                   <Bot className="w-5 h-5 text-[#2457A6]" />
-                  AI Plain-Language Summary (Local Ollama)
+                  AI Plain-Language Summary
                 </h2>
                 <p className="text-xs text-[#667085] mt-0.5">
-                  Explains extracted clinical text in accessible terms using
-                  local-first inference. Strictly informational — never diagnoses
+                  Explains extracted clinical text in accessible terms. Strictly informational — never diagnoses
                   or prescribes.
                 </p>
               </div>
@@ -668,12 +783,8 @@ export default function DocumentExtractionPage() {
 
             {aiError && (
               <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-[#946200] space-y-1">
-                <p className="font-semibold">Local AI Unavailable</p>
+                <p className="font-semibold">AI Summary Notice</p>
                 <p>{aiError}</p>
-                <p className="font-mono text-[11px] text-[#475467]">
-                  Tip: Start Ollama locally and run{" "}
-                  <code>ollama pull qwen2.5:1.5b</code>
-                </p>
               </div>
             )}
 

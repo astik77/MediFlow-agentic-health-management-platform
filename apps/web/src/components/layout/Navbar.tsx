@@ -56,10 +56,6 @@ export function Navbar() {
                 <LayoutDashboard className="w-4 h-4 text-[#2457A6]" />
                 Dashboard
               </Link>
-              <Link href="/health" className={navLinkClass("/health")}>
-                <HeartPulse className="w-4 h-4 text-[#2457A6]" />
-                My Health
-              </Link>
               <Link href="/documents" className={navLinkClass("/documents")}>
                 <FileText className="w-4 h-4 text-[#2457A6]" />
                 Documents
@@ -87,13 +83,6 @@ export function Navbar() {
               >
                 <LayoutDashboard className="w-4 h-4 text-[#2457A6]" />
                 Dash
-              </Link>
-              <Link
-                href="/health"
-                className="md:hidden inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs text-[#172033] hover:bg-slate-100"
-              >
-                <HeartPulse className="w-4 h-4 text-[#2457A6]" />
-                Health
               </Link>
               <Link
                 href="/documents"
@@ -136,6 +125,14 @@ export function Navbar() {
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Sign Out</span>
               </button>
+              {/* My Health tab moved to extreme right corner and hidden for now; can unhide anytime */}
+              <Link
+                href="/health"
+                className="hidden items-center gap-1.5 px-3 py-1.5 rounded-md text-sm text-[#172033] hover:bg-slate-100"
+              >
+                <HeartPulse className="w-4 h-4 text-[#2457A6]" />
+                <span>My Health</span>
+              </Link>
             </>
           ) : (
             <>

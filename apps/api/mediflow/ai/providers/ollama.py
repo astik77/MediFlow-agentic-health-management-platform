@@ -64,7 +64,7 @@ class OllamaProvider:
             },
         }
         if request.expect_json:
-            payload["format"] = request.json_schema if request.json_schema else "json"
+            payload["format"] = "json"
 
         t0 = time.perf_counter()
         try:

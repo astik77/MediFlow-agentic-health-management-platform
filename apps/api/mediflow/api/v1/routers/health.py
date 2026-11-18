@@ -21,6 +21,8 @@ _startup_time = time.time()
 
 
 @router.get("/health")
+@router.get("/api/health")
+@router.get("/healthz")
 async def root_health_check() -> dict[str, Any]:
     """
     Root-level health check — always responds if the server is up.
@@ -68,18 +70,30 @@ async def api_health_check() -> dict[str, Any]:
         logger.warning("pgvector_health_check_failed", error=str(exc))
         result["components"]["pgvector"] = {"status": "unknown", "error": str(exc)}
 
-    # Check local AI provider (non-blocking, graceful degradation when Ollama is offline)
+    # Check default AI provider (non-blocking, graceful degradation when offline)
     try:
-        from mediflow.ai.providers.ollama import OllamaProvider
+        if settings.ai_default_provider == "gemini":
+            from mediflow.ai.providers.external import GeminiProvider
 
-        ollama = OllamaProvider(
-            base_url=settings.ollama_base_url,
-            default_model=settings.ollama_default_model,
-            embedding_model=settings.ollama_embedding_model,
-        )
-        ai_health = await ollama.health_check(
-            timeout_seconds=min(settings.ai_health_check_timeout_seconds, 0.35)
-        )
+            gemini = GeminiProvider(
+                api_key=settings.gemini_api_key,
+                default_model=settings.gemini_model,
+                enabled=settings.gemini_enabled,
+            )
+            ai_health = await gemini.health_check(
+                timeout_seconds=min(settings.ai_health_check_timeout_seconds, 0.35)
+            )
+        else:
+            from mediflow.ai.providers.ollama import OllamaProvider
+
+            ollama = OllamaProvider(
+                base_url=settings.ollama_base_url,
+                default_model=settings.ollama_default_model,
+                embedding_model=settings.ollama_embedding_model,
+            )
+            ai_health = await ollama.health_check(
+                timeout_seconds=min(settings.ai_health_check_timeout_seconds, 0.35)
+            )
         result["components"]["ai_provider"] = {
             "provider": ai_health.provider,
             "is_local": ai_health.is_local,

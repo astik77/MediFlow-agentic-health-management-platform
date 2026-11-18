@@ -79,6 +79,7 @@ class DocumentIntelligenceService:
         storage_root: Path,
         force: bool = False,
         ocr_backend: OcrBackend | None = None,
+        auto_confirm: bool = False,
     ) -> DocumentProcessingJob:
         """
         Execute the Phase 4 document intelligence pipeline on an uploaded document.
@@ -289,35 +290,65 @@ class DocumentIntelligenceService:
                 patient_id=patient.id,
             )
 
-            # Persist candidate HealthObservations (NEVER confirmed automatically)
+            # Persist HealthObservations (auto-confirmed when auto_confirm=True, otherwise candidate)
+            created_observations: list[HealthObservation] = []
             for cand in all_candidates:
-                db.add(
-                    HealthObservation(
-                        patient_id=patient.id,
-                        observation_type=cand.observation_type,
-                        display_name=cand.display_name,
-                        value_raw=cand.value_raw,
-                        unit_raw=cand.unit_raw,
-                        value_numeric=cand.value_numeric,
-                        value_normalized=cand.value_normalized,
-                        unit_normalized=cand.unit_normalized,
-                        reference_range_text=cand.reference_range_text,
-                        abnormality_flag=cand.abnormality_flag,
-                        observed_at=_date_to_utc(cand.observed_date),
-                        source_type="document_extracted",
-                        review_status="candidate",
-                        source_document_id=doc.id,
-                        source_page=cand.source_page,
-                        extraction_method=cand.extraction_method,
-                        extraction_confidence=cand.extraction_confidence,
-                        provenance_metadata=cand.provenance_metadata,
-                        is_archived=False,
-                    )
+                obs = HealthObservation(
+                    patient_id=patient.id,
+                    observation_type=cand.observation_type,
+                    display_name=cand.display_name,
+                    value_raw=cand.value_raw,
+                    unit_raw=cand.unit_raw,
+                    value_numeric=cand.value_numeric,
+                    value_normalized=cand.value_normalized,
+                    unit_normalized=cand.unit_normalized,
+                    reference_range_text=cand.reference_range_text,
+                    abnormality_flag=cand.abnormality_flag,
+                    observed_at=_date_to_utc(cand.observed_date),
+                    source_type="patient_confirmed" if auto_confirm else "document_extracted",
+                    review_status="confirmed" if auto_confirm else "candidate",
+                    source_document_id=doc.id,
+                    source_page=cand.source_page,
+                    extraction_method=cand.extraction_method,
+                    extraction_confidence=cand.extraction_confidence,
+                    provenance_metadata=cand.provenance_metadata,
+                    is_archived=False,
                 )
+                db.add(obs)
+                created_observations.append(obs)
+
+            if auto_confirm and created_observations:
+                await db.flush()
+                # Record HealthEvents on the official timeline
+                for obs in created_observations:
+                    db.add(
+                        HealthEvent(
+                            patient_id=patient.id,
+                            event_category="observation",
+                            title=f"Lab Result: {obs.display_name} = {obs.value_raw} {obs.unit_raw or ''}".strip(),
+                            summary=(
+                                f"Recorded from document '{doc.title}'. "
+                                + (f"Abnormality: {obs.abnormality_flag.upper()}. " if obs.abnormality_flag else "")
+                                + (f"Reference: {obs.reference_range_text}." if obs.reference_range_text else "")
+                            ),
+                            event_occurred_at=obs.observed_at,
+                            source_type="patient_confirmed",
+                            review_status="confirmed",
+                            related_entity_type="observation",
+                            related_entity_id=obs.id,
+                            metadata_json={
+                                "source_document_id": str(doc.id),
+                                "source_page": obs.source_page,
+                                "auto_confirmed": True,
+                            },
+                        )
+                    )
 
             duration_ms = round((time.perf_counter() - t0) * 1000, 1)
             doc.page_count = extraction.total_pages
             doc.upload_status = "ready"
+            if auto_confirm and all_candidates:
+                doc.review_status = "reviewed"
             if doc.document_date is None and extracted_date is not None:
                 doc.document_date = extracted_date
             if doc.document_type == "other" and classification.confidence >= 0.70:
@@ -629,3 +660,56 @@ class DocumentIntelligenceService:
             )
         ).scalars().all()
         return list(rows)
+
+    @staticmethod
+    async def auto_confirm_all(
+        *,
+        db: AsyncSession,
+        document_id: uuid.UUID,
+        patient: PatientProfile,
+    ) -> dict[str, Any]:
+        """Auto-confirm all pending observations for this document into official health history."""
+        doc = await DocumentService.get_document(db=db, document_id=document_id, patient=patient)
+        candidates = list(
+            (
+                await db.execute(
+                    select(HealthObservation).where(
+                        HealthObservation.patient_id == patient.id,
+                        HealthObservation.source_document_id == doc.id,
+                        HealthObservation.review_status == "candidate",
+                        HealthObservation.is_archived.is_(False),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        for obs in candidates:
+            obs.review_status = "confirmed"
+            obs.source_type = "patient_confirmed"
+            db.add(
+                HealthEvent(
+                    patient_id=patient.id,
+                    event_category="observation",
+                    title=f"Lab Result: {obs.display_name} = {obs.value_raw} {obs.unit_raw or ''}".strip(),
+                    summary=(
+                        f"Recorded from document '{doc.title}'. "
+                        + (f"Abnormality: {obs.abnormality_flag.upper()}. " if obs.abnormality_flag else "")
+                        + (f"Reference: {obs.reference_range_text}." if obs.reference_range_text else "")
+                    ),
+                    event_occurred_at=obs.observed_at,
+                    source_type="patient_confirmed",
+                    review_status="confirmed",
+                    related_entity_type="observation",
+                    related_entity_id=obs.id,
+                    metadata_json={
+                        "source_document_id": str(doc.id),
+                        "source_page": obs.source_page,
+                        "auto_confirmed": True,
+                    },
+                )
+            )
+        if candidates:
+            doc.review_status = "reviewed"
+            await db.commit()
+        return {"confirmed_count": len(candidates), "document_id": str(doc.id)}

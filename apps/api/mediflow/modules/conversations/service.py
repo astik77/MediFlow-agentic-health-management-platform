@@ -34,11 +34,44 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-def _auto_title(first_message: str) -> str:
+import re
+
+def _auto_title(first_message: str, symptom_name: str | None = None) -> str:
+    if symptom_name:
+        return f"{symptom_name.strip().title()} Discussion"
     cleaned = " ".join(first_message.strip().split())
-    if len(cleaned) <= 72:
-        return cleaned
-    return cleaned[:69].rstrip() + "..."
+    lower = cleaned.lower()
+    for prefix in (
+        "can you tell me about",
+        "could you tell me about",
+        "what do you think about",
+        "what does it mean if",
+        "i have had a",
+        "i have been having a",
+        "i've had a",
+        "i've been having",
+        "i have a",
+        "i am having",
+        "i feel like",
+        "i'm having",
+        "tell me about",
+        "please explain",
+        "what are the",
+        "why do i have",
+        "how to treat",
+        "help with",
+    ):
+        if lower.startswith(prefix):
+            cleaned = cleaned[len(prefix):].strip()
+            cleaned = re.sub(r"^(a|an|the|my|some)\s+", "", cleaned, flags=re.IGNORECASE).strip()
+            break
+
+    title = cleaned.strip("?.! ").title()
+    if not title:
+        title = "Health Consultation"
+    if len(title) > 60:
+        title = title[:57].rstrip() + "..."
+    return title
 
 
 class ConversationService:
@@ -165,10 +198,6 @@ class ConversationService:
         )
         history_turns = [(m.role, m.content) for m in prior_msgs]
 
-        # Auto-title new conversations from the patient's first message
-        if not prior_msgs and conv.title == "New Health Conversation":
-            conv.title = _auto_title(payload.content)
-
         user_msg = Message(
             id=uuid.uuid4(),
             conversation_id=conv.id,
@@ -202,6 +231,13 @@ class ConversationService:
         )
         db.add(assistant_msg)
         conv.last_message_at = _utc_now()
+
+        # Auto-title new conversations smartly
+        if not prior_msgs and conv.title in ("New Health Conversation", ""):
+            sym_name = None
+            if turn.proposed_action and isinstance(turn.proposed_action, dict):
+                sym_name = turn.proposed_action.get("payload", {}).get("name")
+            conv.title = _auto_title(payload.content, sym_name)
 
         await db.commit()
         await db.refresh(conv)

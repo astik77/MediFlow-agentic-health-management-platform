@@ -5,13 +5,14 @@
 
 [![Release](https://img.shields.io/badge/Release-v2.0.0%20MVP-2457A6?style=flat)](https://github.com/astik77/MediFlow-agentic-health-management-platform/releases/tag/v2.0.0)
 [![CI](https://github.com/astik77/MediFlow-agentic-health-management-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/astik77/MediFlow-agentic-health-management-platform/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/Tests-167%2F167%20Passing-157A5B?style=flat)](docs/quality/reports/TEST_REPORT_010_2026-11-18.txt)
+[![Tests](https://img.shields.io/badge/Tests-168%2F168%20Passing-157A5B?style=flat)](docs/quality/reports/TEST_REPORT_010_2026-11-18.txt)
 [![Security](https://img.shields.io/badge/Security%20Controls-18%2F18%20Verified-157A5B?style=flat)](docs/quality/reports/BASELINE_STATUS.txt)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.163+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-15.3+-000000?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+pgvector-336791?style=flat&logo=postgresql&logoColor=white)](https://github.com/pgvector/pgvector)
 [![Ollama](https://img.shields.io/badge/Local%20AI-Ollama-172033?style=flat)](https://ollama.com/)
+[![Google Gemini](https://img.shields.io/badge/External%20AI-Gemini%203.1%20Flash%20Lite-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
 [![Docker](https://img.shields.io/badge/Self--Hosted-Docker%20%2B%20Caddy-2496ED?style=flat&logo=docker&logoColor=white)](docs/deployment/self-hosted-guide.md)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -41,7 +42,10 @@ Unlike generic health chatbots or third-party cloud apps, MEDIFLOW is engineered
 - **Patient-in-the-Loop Governance**: OCR-extracted observations remain `candidate` and AI-suggested symptoms remain `pending` until explicitly confirmed, edited, or rejected by the patient — unconfirmed records never contaminate trend charts or KPI totals.
 - **Zero-Leakage Patient-Specific Hybrid RAG**: Combines Okapi BM25 lexical search with dense vector similarity (`nomic-embed-text`) via Reciprocal Rank Fusion ($RRF$, $k=60$) strictly scoped by authenticated `patient_id` (`SEC-003` / `RAG-008 = 0.00`).
 - **Deterministic Clinical Safety**: Strictly informational; refuses diagnosis, prescribing, and dosage-change requests while deterministically escalating emergency red-flag symptoms (`AIR-004 = 100%`).
-- **100% Local & Free Infrastructure**: Zero paid APIs required. Runs fully locally with FastAPI, Next.js, PostgreSQL + `pgvector`, RapidOCR ONNX, and local Ollama (`qwen2.5:1.5b` + `nomic-embed-text`), with graceful offline fallbacks when Ollama is unavailable.
+- **Hybrid Local & Cloud AI Architecture**: Local-first private inference via Ollama (`qwen2.5:1.5b` + `nomic-embed-text`) with zero cloud data transmission by default, with seamless optional integration with Google Gemini (`gemini-3.1-flash-lite`) for lightning-fast clinical document summarization, longitudinal summaries, and conversational health guidance.
+- **Conversational Health Assistant**: Handles broad clinical medical inquiries with conversational warmth while strictly citing verified patient records. Features interactive symptom severity selection (`mild` / `moderate` / `severe`) before persisting to history, and smart chat session auto-naming.
+- **Interactive Longitudinal Dashboard**: Longitudinal Health Summaries positioned prominently above biomarker curves, featuring interactive KPI drawers for confirmed observations, active conditions & allergies, and ongoing symptoms contextualized with Gemini-assisted clinical insights.
+- **Granular Timeline Management**: Individual event deletion with confirmation modal, and sanitized clinical views free of internal technical UUIDs and raw database metadata.
 - **Patient Data Sovereignty**: Full portable JSON health vault export (`GET /api/v1/patients/export`) and password-verified cascading account & physical disk erasure (`DELETE /api/v1/patients/account`).
 - **Elevated Public UX**: Modern, approachable landing page (`/`), plain-language capability guide (`/features`), self-hosted privacy policy (`/privacy`), and prominent emergency medical notice (`/disclaimer`).
 
@@ -49,11 +53,11 @@ Unlike generic health chatbots or third-party cloud apps, MEDIFLOW is engineered
 
 ---
 
-## 2. Measured Quality & Security Benchmarks (`v2.0.0`)
+## 2. Measured Quality & Security Benchmarks (`v2.1.0`)
 
 | Evaluation Area | Measured Result | Target / Gate | Status |
 |---|---|---|---|
-| **Automated Backend Suite** | **167/167 passed (100%, 0 warnings)** | 100% pass | ✅ PASS |
+| **Automated Backend Suite** | **168/168 passed (100%, 0 warnings)** | 100% pass | ✅ PASS |
 | **Security Controls (`SEC-001`–`SEC-018`)** | **18/18 verified** | 18/18 controls | ✅ PASS |
 | **Document OCR (`DS-LAB/PRES/DISC/IMG`)** | **CER 0.36%, WER 4.17%, Completeness 100%** | CER < 5%, WER < 10% | ✅ PASS |
 | **Classification & Numeric Extraction** | **100.0%** across all 12 synthetic docs | > 90% | ✅ PASS |
@@ -145,7 +149,7 @@ MediFlow-agentic-health-management-platform/
 | **Backend API** | FastAPI 0.163, Python 3.11, Pydantic v2, structlog | High-performance async REST API with schema enforcement and secret redaction |
 | **Database & Vector** | PostgreSQL 16, `pgvector`, SQLAlchemy 2.0 (asyncio), Alembic | Unified relational + vector store with 19 tables across 9 versioned migrations |
 | **Document OCR & Parsing** | PyMuPDF (`pymupdf`), Pillow, OpenCV, RapidOCR ONNX | Zero-OS-binary, CPU-friendly digital PDF & scanned report extraction |
-| **Local AI & RAG** | Ollama (`qwen2.5:1.5b` + `nomic-embed-text`), BM25 + RRF | Free, private on-premise inference with deterministic offline fallbacks |
+| **Hybrid AI & RAG** | Ollama (`qwen2.5:1.5b` + `nomic-embed-text`), Google Gemini (`gemini-3.1-flash-lite`), BM25 + RRF | Local-first private inference + cloud Gemini option with automatic retry fallback and zero thinking budget latency |
 | **Gateway & Security** | Caddy 2 (auto-HTTPS), ASGI Security Middleware | Single-port gateway, same-origin `/api/*` proxy, and strict security headers |
 | **Automation** | GitHub Actions, Windows Self-Hosted Runner, PowerShell | Continuous integration and zero-friction smart production deployments |
 
@@ -198,6 +202,11 @@ pnpm dev
 - [x] **Phase 7: Patient-Specific Hybrid RAG** (pgvector cosine + BM25 RRF, zero cross-patient leakage `RAG-008 = 0.00`, 150/150 tests).
 - [x] **Phase 8: Dashboard Analytics & Biomarker Trends** (Recharts trend charts with normal reference bands, 7-day health summaries, 162/162 tests).
 - [x] **Phase 9: Security Hardening & Data Portability** (Security headers, JSON health vault export, cascading account deletion, 167/167 tests).
+- [x] **v2.1 Feature Upgrades & Clinical Refinements** (168/168 tests):
+  - **Google Gemini Integration**: Configured `gemini-3.1-flash-lite` with zero thinking-budget overhead and automated graceful fallback resilience for chat and document summaries.
+  - **Conversational Health Assistant**: Broadened clinical guidance beyond patient history, added interactive symptom severity toggles (`mild`/`moderate`/`severe`), and smart topic-based chat auto-renaming.
+  - **Interactive Health Dashboard**: Moved Longitudinal Health Summaries above biomarker trends; added expandable interactive drawers for confirmed observations, active conditions/allergies, and ongoing symptoms with Gemini synthesis.
+  - **Granular Timeline Management**: Individual event deletion with confirmation modal, and sanitized clinical views without raw UUIDs or technical JSON.
 - [x] **Production Deployment:** Turnkey self-hosted Docker stack with Caddy, persistent volumes, and Windows Ollama bridge.
 - [x] **Landing Page & Public UX Redesign:** Modern two-column hero, interactive product preview, `#how-it-works` workflow, `/features`, `/privacy`, `/disclaimer`.
 - [x] **One-Click Automation & CI/CD:** One-click Windows start/stop launchers, GitHub Actions CI with full build gates, and self-hosted CD runner.

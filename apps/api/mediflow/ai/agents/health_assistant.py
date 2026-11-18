@@ -527,8 +527,9 @@ class HealthAssistantAgent:
                 f"{len(bundle['symptoms'])} recent symptom(s), and "
                 f"{len(bundle['observations'])} confirmed observation(s) in your history."
             )
+            provider_label = "Gemini" if provider.name == "gemini" else "AI"
             reply_text = (
-                f"Local AI inference (Ollama) is currently offline, so I am replying in "
+                f"{provider_label} inference is currently unavailable, so I am replying in "
                 f"record-grounded fallback mode. {rec_summary}"
             )
             if symptom_hint is not None:

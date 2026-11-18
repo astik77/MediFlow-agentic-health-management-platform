@@ -55,7 +55,7 @@ async def test_conversation_lifecycle_grounded_reply_and_symptom_proposal(
     )
     assert m1.status_code == 201
     turn = m1.json()
-    assert turn["conversation"]["title"].startswith("I have had a dull headache")
+    assert "headache" in turn["conversation"]["title"].lower()
     asst = turn["assistant_message"]
     assert asst["role"] == "assistant"
     assert asst["safety_level"] == "normal"

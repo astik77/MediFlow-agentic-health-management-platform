@@ -88,3 +88,28 @@ class TestTimelineAPI:
         assert page_res.json()["total"] == 3
         assert len(page_res.json()["items"]) == 2
         assert page_res.json()["items"][0]["title"] == "Annual Preventive Checkup"
+
+    async def test_delete_timeline_event(
+        self, authenticated_client: AsyncClient
+    ) -> None:
+        ev_res = await authenticated_client.post(
+            "/api/v1/timeline/events",
+            json={
+                "event_category": "general",
+                "title": "Temp Event to Delete",
+                "summary": "This should be deleted",
+                "event_occurred_at": "2026-02-01T09:00:00Z",
+            },
+        )
+        assert ev_res.status_code == 201
+        ev_id = ev_res.json()["id"]
+
+        del_res = await authenticated_client.delete(f"/api/v1/timeline/events/{ev_id}")
+        assert del_res.status_code == 204
+
+        # Verify it's gone
+        tl_res = await authenticated_client.get(
+            "/api/v1/timeline", params={"q": "Temp Event to Delete"}
+        )
+        assert tl_res.status_code == 200
+        assert tl_res.json()["total"] == 0

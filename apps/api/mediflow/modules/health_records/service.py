@@ -917,6 +917,26 @@ class HealthRecordsService:
         return event
 
     @staticmethod
+    async def delete_timeline_event(
+        db: AsyncSession,
+        patient: PatientProfile,
+        event_id: uuid.UUID,
+    ) -> bool:
+        stmt = select(HealthEvent).where(
+            HealthEvent.id == event_id,
+            HealthEvent.patient_id == patient.id,
+        )
+        event = (await db.execute(stmt)).scalar_one_or_none()
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Timeline event not found.",
+            )
+        await db.delete(event)
+        await db.commit()
+        return True
+
+    @staticmethod
     async def list_timeline(
         db: AsyncSession,
         patient: PatientProfile,

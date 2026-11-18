@@ -32,6 +32,7 @@ export default function AssistantPage() {
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [draftMessage, setDraftMessage] = useState<string>("");
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [selectedSeverities, setSelectedSeverities] = useState<Record<string, "mild" | "moderate" | "severe">>({});
 
   useEffect(() => {
     if (!authLoading && !authenticated) {
@@ -110,11 +111,19 @@ export default function AssistantPage() {
       convId,
       msgId,
       decision,
+      severity,
     }: {
       convId: string;
       msgId: string;
       decision: "accept" | "dismiss";
-    }) => conversationsApi.resolveProposal(convId, msgId, decision),
+      severity?: "mild" | "moderate" | "severe";
+    }) =>
+      conversationsApi.resolveProposal(
+        convId,
+        msgId,
+        decision,
+        severity ? { severity } : undefined
+      ),
     onSuccess: (_updated, vars) => {
       queryClient.invalidateQueries({
         queryKey: ["conversation", vars.convId],
@@ -172,7 +181,7 @@ export default function AssistantPage() {
           <Info className="w-4 h-4 text-[#2457A6] shrink-0 mt-0.5" />
           <p>
             <strong>Informational Personal Health Assistant:</strong> Grounded
-            strictly in your private MEDIFLOW records using local-first AI.
+            strictly in your private MEDIFLOW records.
             MEDIFLOW does not diagnose, prescribe, or change medication dosages.
             For emergencies, call <strong>112 / 108</strong> or local emergency
             services immediately.
@@ -372,17 +381,56 @@ export default function AssistantPage() {
                                 {msg.proposed_action_json.status}
                               </span>
                             </div>
-                            <p className="text-[#172033]">
-                              <strong>
-                                {msg.proposed_action_json.payload.name}
-                              </strong>{" "}
-                              · Severity:{" "}
-                              <span className="capitalize">
-                                {msg.proposed_action_json.payload.severity}
-                              </span>
-                              {msg.proposed_action_json.payload.body_location &&
-                                ` · Area: ${msg.proposed_action_json.payload.body_location}`}
-                            </p>
+                            <div className="text-[#172033] space-y-1.5">
+                              <div>
+                                <strong>
+                                  {msg.proposed_action_json.payload.name}
+                                </strong>
+                                {msg.proposed_action_json.payload.body_location &&
+                                  ` · Area: ${msg.proposed_action_json.payload.body_location}`}
+                              </div>
+
+                              {msg.proposed_action_json.status === "pending" ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[#475467] font-medium">Severity:</span>
+                                  <div className="inline-flex rounded-md border border-[#D0D5DD] p-0.5 bg-slate-50 gap-1">
+                                    {(["mild", "moderate", "severe"] as const).map((sev) => {
+                                      const currentSev =
+                                        selectedSeverities[msg.id] ??
+                                        msg.proposed_action_json?.payload.severity ??
+                                        "moderate";
+                                      const isSelected = currentSev === sev;
+                                      return (
+                                        <button
+                                          key={sev}
+                                          type="button"
+                                          onClick={() =>
+                                            setSelectedSeverities((prev) => ({
+                                              ...prev,
+                                              [msg.id]: sev,
+                                            }))
+                                          }
+                                          className={`px-2 py-0.5 rounded text-[11px] capitalize transition-colors ${
+                                            isSelected
+                                              ? "bg-[#2457A6] text-white font-semibold shadow-xs"
+                                              : "text-[#475467] hover:text-[#172033] hover:bg-slate-200"
+                                          }`}
+                                        >
+                                          {sev}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ) : (
+                                <p>
+                                  Severity:{" "}
+                                  <span className="capitalize font-medium">
+                                    {msg.proposed_action_json.payload.severity}
+                                  </span>
+                                </p>
+                              )}
+                            </div>
 
                             {msg.proposed_action_json.status === "pending" && (
                               <div className="flex items-center gap-2 pt-1">
@@ -394,6 +442,10 @@ export default function AssistantPage() {
                                       convId: msg.conversation_id,
                                       msgId: msg.id,
                                       decision: "accept",
+                                      severity:
+                                        selectedSeverities[msg.id] ??
+                                        msg.proposed_action_json?.payload.severity ??
+                                        "moderate",
                                     })
                                   }
                                   className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#157A5B] hover:bg-emerald-800 text-white font-semibold"

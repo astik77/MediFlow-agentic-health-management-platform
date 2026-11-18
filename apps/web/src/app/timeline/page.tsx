@@ -11,6 +11,8 @@ import {
   ChevronUp,
   Loader2,
   Calendar,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -38,11 +40,22 @@ export default function MedicalTimelinePage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // Quick patient update form
   const [newTitle, setNewTitle] = useState("");
   const [newSummary, setNewSummary] = useState("");
   const [newDate, setNewDate] = useState("");
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => timelineApi.deleteEvent(id),
+    onSuccess: () => {
+      setEventToDelete(null);
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+      queryClient.invalidateQueries({ queryKey: ["health"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+  });
 
   useEffect(() => {
     if (!authLoading && !authenticated) {
@@ -268,51 +281,113 @@ export default function MedicalTimelinePage() {
                           })}
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setExpandedId(isExpanded ? null : ev.id)
-                        }
-                        aria-label="Toggle event details"
-                        className="p-1.5 rounded-md border border-[#E4E7EC] text-[#667085] hover:bg-slate-50"
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
-                        )}
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setEventToDelete({ id: ev.id, title: ev.title })}
+                          title="Delete event from timeline"
+                          aria-label="Delete timeline event"
+                          className="p-1.5 rounded-md border border-[#E4E7EC] text-[#667085] hover:text-[#B42318] hover:border-red-200 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedId(isExpanded ? null : ev.id)
+                          }
+                          aria-label="Toggle event details"
+                          className="p-1.5 rounded-md border border-[#E4E7EC] text-[#667085] hover:bg-slate-50 transition-colors"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="mt-4 pt-3 border-t border-[#E4E7EC] text-xs text-[#667085] space-y-1.5">
-                      <div>
-                        <strong>Occurred At:</strong>{" "}
-                        {new Date(ev.event_occurred_at).toISOString()}
-                      </div>
-                      <div>
-                        <strong>Recorded At:</strong>{" "}
-                        {new Date(ev.created_at).toISOString()}
+                    <div className="mt-4 pt-3 border-t border-[#E4E7EC] text-xs text-[#667085] space-y-2">
+                      <div className="flex flex-wrap gap-x-6 gap-y-1">
+                        <div>
+                          <strong className="text-[#344054]">Occurred:</strong>{" "}
+                          {new Date(ev.event_occurred_at).toLocaleString([], {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </div>
+                        <div>
+                          <strong className="text-[#344054]">Recorded to Vault:</strong>{" "}
+                          {new Date(ev.created_at).toLocaleString([], {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </div>
                       </div>
                       {ev.related_entity_type && (
                         <div>
-                          <strong>Linked Record:</strong> {ev.related_entity_type}{" "}
-                          <code className="text-[11px] bg-slate-100 px-1.5 py-0.5 rounded">
-                            {ev.related_entity_id}
-                          </code>
+                          <strong className="text-[#344054]">Source Category:</strong>{" "}
+                          <span className="capitalize px-2 py-0.5 rounded bg-slate-100 text-[#475467]">
+                            {ev.related_entity_type.replace("_", " ")}
+                          </span>
                         </div>
-                      )}
-                      {ev.metadata_json && (
-                        <pre className="mt-2 p-2.5 rounded bg-[#F7F9FC] border border-[#E4E7EC] overflow-x-auto text-[11px] text-[#172033]">
-                          {JSON.stringify(ev.metadata_json, null, 2)}
-                        </pre>
                       )}
                     </div>
                   )}
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {eventToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+            <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-center gap-3 text-[#B42318]">
+                <div className="p-2 rounded-full bg-red-100">
+                  <AlertTriangle className="w-5 h-5 text-[#B42318]" />
+                </div>
+                <h3 className="text-base font-semibold text-[#172033]">
+                  Delete Timeline Event
+                </h3>
+              </div>
+              <p className="text-sm text-[#475467] leading-relaxed">
+                Are you sure you want to delete <strong className="text-[#172033]">&ldquo;{eventToDelete.title}&rdquo;</strong>? 
+                This action will permanently delete this record from your medical timeline.
+              </p>
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => setEventToDelete(null)}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg border border-[#D0D5DD] text-[#344054] hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(eventToDelete.id)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-[#B42318] hover:bg-red-800 text-white transition-colors"
+                >
+                  {deleteMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete Event
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

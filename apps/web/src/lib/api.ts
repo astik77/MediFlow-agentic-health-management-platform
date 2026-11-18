@@ -380,6 +380,11 @@ export const timelineApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  deleteEvent: (eventId: string): Promise<void> =>
+    apiRequest<void>(`/api/v1/timeline/events/${eventId}`, {
+      method: "DELETE",
+    }),
 };
 
 export const documentsApi = {
@@ -469,9 +474,20 @@ export const documentsApi = {
   getDownloadUrl: (id: string): string =>
     `${API_BASE_URL}/api/v1/documents/${id}/download`,
 
-  process: (id: string, force = false): Promise<DocumentProcessingJob> =>
-    apiRequest<DocumentProcessingJob>(
-      `/api/v1/documents/${id}/process${force ? "?force=true" : ""}`,
+  process: (id: string, force = false, autoConfirm = true): Promise<DocumentProcessingJob> => {
+    const params = new URLSearchParams();
+    if (force) params.set("force", "true");
+    if (autoConfirm) params.set("auto_confirm", "true");
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    return apiRequest<DocumentProcessingJob>(
+      `/api/v1/documents/${id}/process${qs}`,
+      { method: "POST" }
+    );
+  },
+
+  autoConfirm: (id: string): Promise<{ confirmed_count: number; document_id: string }> =>
+    apiRequest<{ confirmed_count: number; document_id: string }>(
+      `/api/v1/documents/${id}/auto-confirm`,
       { method: "POST" }
     ),
 
@@ -555,13 +571,19 @@ export const conversationsApi = {
   resolveProposal: (
     conversationId: string,
     messageId: string,
-    decision: "accept" | "dismiss"
+    decision: "accept" | "dismiss",
+    overrides?: {
+      severity?: "mild" | "moderate" | "severe";
+      name?: string;
+      body_location?: string;
+      notes?: string;
+    }
   ): Promise<ConversationMessage> =>
     apiRequest<ConversationMessage>(
       `/api/v1/conversations/${conversationId}/messages/${messageId}/proposal`,
       {
         method: "POST",
-        body: JSON.stringify({ decision }),
+        body: JSON.stringify({ decision, ...overrides }),
       }
     ),
 };

@@ -266,6 +266,10 @@ async def process_document(
         default=False,
         description="Re-process even if already completed for current pipeline version",
     ),
+    auto_confirm: bool = Query(
+        default=False,
+        description="Auto-confirm all extracted observations into official health history",
+    ),
     db: AsyncSession = Depends(get_db),
     current_patient: PatientProfile = Depends(get_current_patient),
 ) -> DocumentProcessingJobResponse:
@@ -280,8 +284,25 @@ async def process_document(
         patient=current_patient,
         storage_root=_storage_root(),
         force=force,
+        auto_confirm=auto_confirm,
     )
     return DocumentProcessingJobResponse.model_validate(job)
+
+
+@router.post(
+    "/{document_id}/auto-confirm",
+    summary="Auto-confirm all observations for this document into official health history",
+)
+async def auto_confirm_document(
+    document_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_patient: PatientProfile = Depends(get_current_patient),
+) -> dict[str, Any]:
+    return await DocumentIntelligenceService.auto_confirm_all(
+        db=db,
+        document_id=document_id,
+        patient=current_patient,
+    )
 
 
 @router.get(

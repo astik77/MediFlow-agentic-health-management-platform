@@ -35,7 +35,7 @@ class GeminiProvider:
         self,
         *,
         api_key: str,
-        default_model: str = "gemini-2.0-flash-exp",
+        default_model: str = "gemini-3.1-flash-lite",
         enabled: bool = False,
         timeout_seconds: float = 30.0,
         transport: httpx.AsyncBaseTransport | None = None,
@@ -51,13 +51,10 @@ class GeminiProvider:
             raise ProviderUnavailableError("Gemini provider is disabled or missing API key.")
 
         model = request.model or self.default_model
-        url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{model}:generateContent"
-        )
         gen_cfg: dict[str, Any] = {
             "temperature": request.temperature,
             "maxOutputTokens": request.max_tokens,
+            "thinkingConfig": {"thinkingBudget": 0},
         }
         if request.expect_json:
             gen_cfg["responseMimeType"] = "application/json"
@@ -69,16 +66,29 @@ class GeminiProvider:
         }
 
         t0 = time.perf_counter()
-        try:
+        active_model = model
+
+        async def _call_api(target_model: str) -> httpx.Response:
+            url = (
+                f"https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{target_model}:generateContent"
+            )
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(self.timeout_seconds),
                 transport=self._transport,
             ) as client:
-                resp = await client.post(
+                return await client.post(
                     url,
                     headers={"x-goog-api-key": self._api_key},
                     json=body,
                 )
+
+        try:
+            resp = await _call_api(active_model)
+            # Automatic resilient fallback if configured model was deprecated (404) or spike unavailable (503)
+            if resp.status_code in (404, 503) and active_model != "gemini-3.1-flash-lite":
+                active_model = "gemini-3.1-flash-lite"
+                resp = await _call_api(active_model)
         except httpx.TimeoutException as exc:
             raise ProviderTimeoutError("Gemini request timed out.") from exc
         except httpx.HTTPError as exc:
@@ -98,7 +108,7 @@ class GeminiProvider:
         return GenerationResponse(
             content=content,
             provider=self.name,
-            model=model,
+            model=active_model,
             latency_ms=latency_ms,
             input_tokens=usage.get("promptTokenCount"),
             output_tokens=usage.get("candidatesTokenCount"),

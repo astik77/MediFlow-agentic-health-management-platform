@@ -62,3 +62,22 @@ async def create_timeline_event(
 ) -> Any:
     """Record a standalone patient-reported health update on the medical timeline."""
     return await HealthRecordsService.create_timeline_event(db, current_patient, payload)
+
+
+@router.delete(
+    "/events/{event_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete an event from the patient's medical timeline",
+)
+async def delete_timeline_event(
+    event_id: str,
+    current_patient: PatientProfile = Depends(get_current_patient),
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    import uuid
+    try:
+        parsed_id = uuid.UUID(event_id)
+    except ValueError:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid event UUID.")
+    await HealthRecordsService.delete_timeline_event(db, current_patient, parsed_id)
