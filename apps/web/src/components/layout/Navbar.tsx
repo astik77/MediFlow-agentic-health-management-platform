@@ -33,7 +33,7 @@ export function Navbar() {
     }`;
 
   return (
-    <header className="border-b border-[#E4E7EC] bg-white sticky top-0 z-50">
+    <header className="border-b border-[#E4E7EC] bg-white/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-3 group">
@@ -44,8 +44,8 @@ export function Navbar() {
               <span className="font-bold text-lg tracking-tight text-[#172033]">
                 MEDIFLOW
               </span>
-              <span className="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#2457A6] border border-blue-200 hidden sm:inline">
-                MVP v1.0
+              <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-[#2457A6] border border-blue-200 hidden sm:inline">
+                Early Access · v1.0.1
               </span>
             </div>
           </Link>
@@ -140,14 +140,24 @@ export function Navbar() {
           ) : (
             <>
               <Link
+                href="/features"
+                className={`px-3.5 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2457A6] ${
+                  pathname === "/features"
+                    ? "bg-blue-50 text-[#2457A6] font-semibold"
+                    : "text-[#172033] hover:bg-slate-100"
+                }`}
+              >
+                Features
+              </Link>
+              <Link
                 href="/login"
-                className="px-3.5 py-2 rounded-lg text-[#172033] hover:bg-slate-100 transition-colors"
+                className="px-3.5 py-2 rounded-lg text-[#172033] hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2457A6]"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2457A6] hover:bg-[#1D4688] text-white transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#2457A6] hover:bg-[#1D4688] text-white transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2457A6] focus-visible:ring-offset-2"
               >
                 <ShieldCheck className="w-4 h-4" />
                 Create Account
