@@ -72,7 +72,7 @@ Edit `.env.prod` (`nano .env.prod`) and paste those generated values.
   Point your domain's DNS `A` record to your server IP, open ports `80` and `443` in your firewall, and set:
   ```env
   MEDIFLOW_SITE_ADDRESS=health.yourdomain.com
-  CORS_ORIGINS=https://health.yourdomain.com
+  CORS_ORIGINS=["https://health.yourdomain.com"]
   COOKIE_SECURE=true
   ```
   Caddy will automatically obtain and renew a free Let's Encrypt TLS certificate!
@@ -80,13 +80,19 @@ Edit `.env.prod` (`nano .env.prod`) and paste those generated values.
   Keep the defaults (or add your LAN/Tailscale IP to `CORS_ORIGINS`):
   ```env
   MEDIFLOW_SITE_ADDRESS=:80
-  CORS_ORIGINS=http://localhost,http://100.x.y.z
+  CORS_ORIGINS=["http://localhost","http://100.x.y.z"]
   COOKIE_SECURE=false
   ```
 
 ### Step 3 — Build and Launch the Stack
+**If Ollama is already installed on your host PC** (`OLLAMA_BASE_URL=http://host.docker.internal:11434`):
 ```bash
 docker compose -f docker-compose.prod.yaml --env-file .env.prod up -d --build
+```
+**On a fresh VPS (run bundled Ollama inside Docker + auto-pull models):**
+Set `OLLAMA_BASE_URL=http://ollama:11434` in `.env.prod`, then run:
+```bash
+docker compose -f docker-compose.prod.yaml --profile bundled-ollama --env-file .env.prod up -d --build
 ```
 
 ### Step 4 — Verify Everything Is Healthy

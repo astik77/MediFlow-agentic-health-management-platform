@@ -39,6 +39,7 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: mediflow_prod_ollama
+    profiles: ["bundled-ollama"]
     restart: unless-stopped
     volumes:
       - mediflow_ollama_data:/root/.ollama
@@ -54,6 +55,7 @@ services:
   ollama-init:
     image: ollama/ollama:latest
     container_name: mediflow_prod_ollama_init
+    profiles: ["bundled-ollama"]
     restart: "no"
     depends_on:
       ollama:
@@ -93,10 +95,10 @@ services:
       SESSION_MAX_AGE_SECONDS: ${SESSION_MAX_AGE_SECONDS:-86400}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
       COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost"]}
       UPLOAD_DIR: /data/uploads
       MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-50}
-      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
       OLLAMA_DEFAULT_MODEL: ${OLLAMA_DEFAULT_MODEL:-qwen2.5:1.5b}
       OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
       OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-180}
@@ -106,6 +108,8 @@ services:
       EXTERNAL_AI_SYNTHETIC_ONLY: "true"
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       LOG_FORMAT: json
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - mediflow_uploads_data:/data/uploads
     networks:

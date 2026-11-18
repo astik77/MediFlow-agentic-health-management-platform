@@ -22,7 +22,7 @@ COPY mediflow ./mediflow
 COPY migrations ./migrations
 COPY alembic.ini ./alembic.ini
 
-RUN uv sync --frozen --no-dev
+RUN touch README.md && uv sync --frozen --no-dev
 
 
 FROM python:3.11-slim-bookworm AS runtime
