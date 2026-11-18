@@ -1,0 +1,67 @@
+name: MediFlow CD (Self-Hosted)
+
+on:
+  workflow_run:
+    workflows: ["MediFlow CI"]
+    types:
+      - completed
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      force_rebuild_all:
+        description: "Rebuild all production containers even if only subset changed"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: mediflow-self-hosted-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Self-Hosted Docker Stack
+    # Run automatically only when MediFlow CI passed on main, OR on manual trigger
+    if: >-
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
+    runs-on: [self-hosted, mediflow-prod]
+
+    steps:
+      - name: Pull latest main and deploy changed containers
+        shell: powershell
+        env:
+          DEPLOY_DIR: ${{ vars.MEDIFLOW_DEPLOY_DIR }}
+          FORCE_ALL: ${{ inputs.force_rebuild_all }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $targetDir = if ($env:DEPLOY_DIR) { $env:DEPLOY_DIR } else { $env:MEDIFLOW_DEPLOY_DIR }
+          if (-not $targetDir) {
+            throw "Set the repository variable MEDIFLOW_DEPLOY_DIR (e.g. C:\Astik\Projects\MediFlow-agentic-health-management-platform) in GitHub Settings -> Secrets and variables -> Actions -> Variables."
+          }
+
+          if (-not (Test-Path $targetDir)) {
+            throw "Deploy directory '$targetDir' does not exist on this runner."
+          }
+
+          Set-Location $targetDir
+
+          # Record current commit before pulling so deploy.ps1 knows exactly what changed
+          $beforeSha = (git rev-parse HEAD).Trim()
+
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+
+          $afterSha = (git rev-parse HEAD).Trim()
+          Write-Host "Local HEAD before pull: $beforeSha | after pull: $afterSha"
+
+          if ($env:FORCE_ALL -eq "true") {
+            & "$targetDir\scripts\deploy.ps1" -ForceAll
+          } elseif ($beforeSha -eq $afterSha) {
+            Write-Host "Working copy already at latest commit ($afterSha); deploying changes from HEAD~1..HEAD."
+            & "$targetDir\scripts\deploy.ps1" -FromRef "HEAD~1" -ToRef "HEAD"
+          } else {
+            & "$targetDir\scripts\deploy.ps1" -FromRef $beforeSha -ToRef $afterSha
+          }

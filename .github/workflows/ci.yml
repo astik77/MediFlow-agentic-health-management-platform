@@ -87,3 +87,11 @@ jobs:
       - name: Lint
         working-directory: apps/web
         run: pnpm lint
+
+      - name: Production Build
+        working-directory: apps/web
+        env:
+          NEXT_PUBLIC_API_URL: ""
+          NEXT_PUBLIC_APP_NAME: MediFlow
+          NEXT_PUBLIC_APP_ENV: production
+        run: pnpm build
