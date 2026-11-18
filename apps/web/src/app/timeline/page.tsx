@@ -41,6 +41,7 @@ export default function MedicalTimelinePage() {
   const [endDate, setEndDate] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [eventToDelete, setEventToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Quick patient update form
   const [newTitle, setNewTitle] = useState("");
@@ -51,9 +52,15 @@ export default function MedicalTimelinePage() {
     mutationFn: (id: string) => timelineApi.deleteEvent(id),
     onSuccess: () => {
       setEventToDelete(null);
+      setDeleteError(null);
       queryClient.invalidateQueries({ queryKey: ["timeline"] });
       queryClient.invalidateQueries({ queryKey: ["health"] });
       queryClient.invalidateQueries({ queryKey: ["analytics"] });
+    },
+    onError: (err: unknown) => {
+      setDeleteError(
+        err instanceof Error ? err.message : "Failed to delete timeline event."
+      );
     },
   });
 
@@ -359,11 +366,19 @@ export default function MedicalTimelinePage() {
                 Are you sure you want to delete <strong className="text-[#172033]">&ldquo;{eventToDelete.title}&rdquo;</strong>? 
                 This action will permanently delete this record from your medical timeline.
               </p>
+              {deleteError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-[#B42318]">
+                  {deleteError}
+                </div>
+              )}
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   type="button"
                   disabled={deleteMutation.isPending}
-                  onClick={() => setEventToDelete(null)}
+                  onClick={() => {
+                    setEventToDelete(null);
+                    setDeleteError(null);
+                  }}
                   className="px-4 py-2 text-xs font-semibold rounded-lg border border-[#D0D5DD] text-[#344054] hover:bg-slate-50 transition-colors"
                 >
                   Cancel
@@ -372,7 +387,7 @@ export default function MedicalTimelinePage() {
                   type="button"
                   disabled={deleteMutation.isPending}
                   onClick={() => deleteMutation.mutate(eventToDelete.id)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-[#B42318] hover:bg-red-800 text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-[#B42318] hover:bg-red-800 text-white transition-colors disabled:opacity-60"
                 >
                   {deleteMutation.isPending ? (
                     <>

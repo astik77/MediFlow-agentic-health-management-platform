@@ -105,7 +105,7 @@ class TestTimelineAPI:
         ev_id = ev_res.json()["id"]
 
         del_res = await authenticated_client.delete(f"/api/v1/timeline/events/{ev_id}")
-        assert del_res.status_code == 204
+        assert del_res.status_code in (200, 204)
 
         # Verify it's gone
         tl_res = await authenticated_client.get(

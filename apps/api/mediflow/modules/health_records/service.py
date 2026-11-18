@@ -932,6 +932,28 @@ class HealthRecordsService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Timeline event not found.",
             )
+        # Cascade soft-archive to related clinical entity if linked
+        if event.related_entity_type and event.related_entity_id:
+            try:
+                if event.related_entity_type == "symptom":
+                    sym = await db.get(PatientSymptom, event.related_entity_id)
+                    if sym and sym.patient_id == patient.id:
+                        sym.is_archived = True
+                elif event.related_entity_type == "condition":
+                    cond = await db.get(PatientCondition, event.related_entity_id)
+                    if cond and cond.patient_id == patient.id:
+                        cond.is_archived = True
+                elif event.related_entity_type == "allergy":
+                    allg = await db.get(PatientAllergy, event.related_entity_id)
+                    if allg and allg.patient_id == patient.id:
+                        allg.is_archived = True
+                elif event.related_entity_type == "observation":
+                    obs = await db.get(HealthObservation, event.related_entity_id)
+                    if obs and obs.patient_id == patient.id:
+                        obs.is_archived = True
+            except Exception as err:
+                logger.warning("timeline_cascade_archive_failed", error=str(err))
+
         await db.delete(event)
         await db.commit()
         return True

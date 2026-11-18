@@ -99,6 +99,16 @@ async function apiRequest<T>(
     throw new ApiError(response.status, detail);
   }
 
+  if (response.status === 204 || response.status === 205) {
+    return undefined as unknown as T;
+  }
+
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    const text = await response.text();
+    return (text ? text : undefined) as unknown as T;
+  }
+
   return (await response.json()) as T;
 }
 
